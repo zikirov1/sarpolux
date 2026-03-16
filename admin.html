@@ -2,70 +2,187 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarpo Admin | Boshqaruv</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sarpo Admin | Mobile</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --pink: #F48FB1; --dark: #2c3e50; --white: #ffffff; }
-        body { font-family: 'Montserrat', sans-serif; margin: 0; background: #fffafa; display: flex; flex-direction: column; align-items: center; }
+        :root { --pink: #F48FB1; --dark: #2c3e50; --white: #ffffff; --gap: 15px; }
         
-        .container { width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            margin: 0; 
+            background: #f8f9fa; 
+            color: var(--dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 500px; /* Mobil uchun optimal kenglik */
+            margin: 0 auto;
+            padding: var(--gap);
+            box-sizing: border-box;
+        }
+
+        .card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        header h2 { color: var(--pink); margin: 0; letter-spacing: 3px; font-size: 24px; }
+
+        input, select { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 12px; 
+            border: 1px solid #eee; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* Mobil klaviaturada zoom bo'lmasligi uchun kamida 16px */
+            outline: none;
+            background: #fafafa;
+        }
+
+        .btn { 
+            padding: 15px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 600; 
+            font-size: 16px;
+            transition: 0.2s active;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
         
-        h2, h3 { color: var(--dark); text-align: center; margin-top: 0; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
-        
-        .btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.3s; margin-bottom: 5px; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+
         .btn-save { background: var(--pink); color: white; }
-        .btn-add { background: #fce4ec; color: var(--pink); border: 1px dashed var(--pink); }
-        .btn-edit { background: #3498db; color: white; width: auto; padding: 5px 15px; font-size: 12px; }
-        .btn-delete { background: #e74c3c; color: white; width: auto; padding: 5px 15px; font-size: 12px; }
+        .btn-add { background: #fff; color: var(--pink); border: 2px dashed var(--pink); margin-top: 10px; }
 
-        /* Mahsulotlar Ro'yxati Stili */
-        .product-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #f0f0f0; }
-        .product-item img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; margin-right: 15px; }
+        /* Mahsulotlar Ro'yxati */
+        .product-item { 
+            display: flex; 
+            align-items: center; 
+            background: white; 
+            padding: 12px; 
+            border-radius: 16px; 
+            margin-bottom: 10px; 
+            border: 1px solid #f0f0f0;
+        }
+
+        .product-item img { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 12px; 
+            object-fit: cover; 
+            margin-right: 12px; 
+        }
+
         .product-info { flex-grow: 1; }
-        .product-info b { display: block; font-size: 14px; }
-        .product-info span { font-size: 12px; color: #888; }
+        .product-info b { display: block; font-size: 15px; margin-bottom: 4px; }
+        .product-info span { font-size: 13px; color: var(--pink); font-weight: 600; }
 
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 10000; }
-        .heart-loader { width: 30px; height: 30px; background-color: var(--pink); transform: rotate(45deg); animation: heartBeat 1.2s infinite; position: relative; }
-        .heart-loader::before, .heart-loader::after { content: ""; width: 30px; height: 30px; background-color: var(--pink); border-radius: 50%; position: absolute; }
-        .heart-loader::before { top: -15px; left: 0; }
-        .heart-loader::after { left: -15px; top: 0; }
-        @keyframes heartBeat { 0%, 100% { transform: rotate(45deg) scale(0.8); } 50% { transform: rotate(45deg) scale(1); } }
+        .actions { display: flex; gap: 8px; }
+        .btn-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
 
-        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 15px; border-radius: 15px; margin-bottom: 10px; }
-        .gallery { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
-        .img-card { width: 50px; height: 50px; border-radius: 5px; overflow: hidden; border: 1px solid #eee; }
+        /* Variantlar va Galereya */
+        .variant-box { 
+            background: #fffafa; 
+            border: 1px solid #fce4ec; 
+            padding: 15px; 
+            border-radius: 15px; 
+            margin-top: 15px; 
+            position: relative;
+        }
+
+        .gallery { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 8px; 
+            margin-top: 10px; 
+        }
+
+        .img-card { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            border: 1px solid #eee; 
+            position: relative;
+        }
+
         .img-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Loader */
+        #loader { 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.9); 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10000; 
+        }
+
+        .heart { width: 40px; height: 40px; background: var(--pink); transform: rotate(45deg); animation: beat 1.2s infinite; position: relative; }
+        .heart:before, .heart:after { content: ""; width: 40px; height: 40px; background: var(--pink); border-radius: 50%; position: absolute; }
+        .heart:before { top: -20px; left: 0; }
+        .heart:after { left: -20px; top: 0; }
+        @keyframes beat { 0%, 100% { transform: rotate(45deg) scale(0.8); } 50% { transform: rotate(45deg) scale(1.1); } }
     </style>
 </head>
 <body>
 
-<div id="loader"><div class="heart-loader"></div></div>
+<div id="loader"><div class="heart"></div></div>
 
 <div class="container">
+    <header>
+        <h2>SARPO ADMIN</h2>
+    </header>
+
     <div class="card">
-        <h2 id="form-title">Yangi Mahsulot</h2>
+        <h3 id="form-title" style="margin-bottom: 15px; font-size: 18px;">Yangi Mahsulot</h3>
         <input type="hidden" id="edit-id">
         <input type="text" id="p-name" placeholder="Mahsulot nomi">
         <input type="number" id="p-price" placeholder="Narxi (so'm)">
         
         <div id="variant-list"></div>
-        <button class="btn btn-add" onclick="addVariant()">+ Rang qo'shish</button>
-        <button class="btn btn-save" onclick="saveData()" id="save-btn">BAZAGA SAQLASH</button>
-        <button class="btn" style="display:none; background:#95a5a6; color:white;" id="cancel-btn" onclick="resetForm()">BEKOR QILISH</button>
+        <button class="btn btn-add" onclick="addVariant()">+ Rang va Rasm qo'shish</button>
+        
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-save" onclick="saveData()" id="save-btn">SAQLASH</button>
+            <button class="btn" style="display:none; background:#eee; color:#666;" id="cancel-btn" onclick="resetForm()">BEKOR QILISH</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Barcha Mahsulotlar</h3>
-        <div id="product-list-admin"></div>
-    </div>
+    <h3 style="padding-left: 10px; font-size: 18px;">Mahsulotlar ro'yxati</h3>
+    <div id="product-list-admin"></div>
 </div>
 
 <script>
@@ -80,25 +197,25 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 1. Ma'lumotlarni Real-vaqtda yuklash
+    // Ma'lumotlarni yuklash
     db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
         const list = document.getElementById('product-list-admin');
         list.innerHTML = "";
         snapshot.forEach((doc) => {
             const p = doc.data();
             const id = doc.id;
-            let img = p.variants?.[0]?.images?.[0] || "";
+            const img = p.variants?.[0]?.images?.[0] || 'https://via.placeholder.com/60';
             
             list.innerHTML += `
                 <div class="product-item">
-                    <img src="${img || 'https://via.placeholder.com/50'}" alt="">
+                    <img src="${img}" alt="">
                     <div class="product-info">
                         <b>${p.name}</b>
                         <span>${Number(p.price).toLocaleString()} so'm</span>
                     </div>
-                    <div>
-                        <button class="btn-edit" onclick="editProduct('${id}')">✏️</button>
-                        <button class="btn-delete" onclick="deleteProduct('${id}')">🗑️</button>
+                    <div class="actions">
+                        <button class="btn-circle" style="background:#e3f2fd; color:#1976d2;" onclick="editProduct('${id}')">✏️</button>
+                        <button class="btn-circle" style="background:#ffebee; color:#d32f2f;" onclick="deleteProduct('${id}')">🗑️</button>
                     </div>
                 </div>
             `;
@@ -112,11 +229,12 @@
         div.id = `v-${vId}`;
         div.innerHTML = `
             <input type="text" placeholder="Rang nomi" class="v-color" value="${data?.color || ''}">
-            <input type="file" multiple accept="image/*" onchange="preview(this, '${vId}')" style="font-size:10px">
+            <input type="file" multiple accept="image/*" onchange="preview(this, '${vId}')" id="file-${vId}" style="display:none">
+            <button class="btn" style="background:white; border:1px solid #ddd; font-size:13px; padding:10px;" onclick="document.getElementById('file-${vId}').click()">📷 Rasmlarni tanlash</button>
             <div class="gallery" id="gal-${vId}">
                 ${(data?.images || []).map(img => `<div class="img-card"><img src="${img}"></div>`).join('')}
             </div>
-            <button onclick="document.getElementById('v-${vId}').remove()" style="color:red; background:none; border:none; font-size:10px; cursor:pointer">O'chirish</button>
+            <p onclick="document.getElementById('v-${vId}').remove()" style="color:#d32f2f; font-size:12px; text-align:right; margin:10px 0 0; cursor:pointer;">❌ O'chirish</p>
         `;
         document.getElementById('variant-list').appendChild(div);
     }
@@ -135,13 +253,12 @@
         });
     }
 
-    // 2. Saqlash (Yangi yoki Tahrirlangan)
     async function saveData() {
         const id = document.getElementById('edit-id').value;
         const name = document.getElementById('p-name').value;
         const price = document.getElementById('p-price').value;
         
-        if(!name || !price) return alert("To'ldiring!");
+        if(!name || !price) return alert("Nom va narxni kiriting!");
 
         document.getElementById('loader').style.display = 'flex';
         
@@ -150,7 +267,7 @@
             const color = vBox.querySelector('.v-color').value;
             const images = [];
             vBox.querySelectorAll('.img-card img').forEach(img => images.push(img.src));
-            variants.push({ color, images });
+            if(color || images.length > 0) variants.push({ color, images });
         });
 
         const productData = {
@@ -158,39 +275,34 @@
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        if(!id) productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-
         try {
             if(id) {
                 await db.collection("products").doc(id).update(productData);
             } else {
+                productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 await db.collection("products").add(productData);
             }
             resetForm();
-        } catch (e) { alert("Xato!"); }
+        } catch (e) { alert("Xatolik!"); }
         document.getElementById('loader').style.display = 'none';
     }
 
-    // 3. Tahrirlashga tayyorlash
     async function editProduct(id) {
         const doc = await db.collection("products").doc(id).get();
         const p = doc.data();
-        
         document.getElementById('edit-id').value = id;
         document.getElementById('p-name').value = p.name;
         document.getElementById('p-price').value = p.price;
         document.getElementById('form-title').innerText = "Tahrirlash";
         document.getElementById('save-btn').innerText = "O'ZGARISHNI SAQLASH";
         document.getElementById('cancel-btn').style.display = "block";
-        
         document.getElementById('variant-list').innerHTML = "";
         p.variants?.forEach(v => addVariant(v));
-        window.scrollTo(0, 0);
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // 4. O'chirish
     async function deleteProduct(id) {
-        if(confirm("Ushbu mahsulotni o'chirasizmi?")) {
+        if(confirm("Ushbu mahsulot o'chirilsinmi?")) {
             await db.collection("products").doc(id).delete();
         }
     }
@@ -201,7 +313,7 @@
         document.getElementById('p-price').value = "";
         document.getElementById('variant-list').innerHTML = "";
         document.getElementById('form-title').innerText = "Yangi Mahsulot";
-        document.getElementById('save-btn').innerText = "BAZAGA SAQLASH";
+        document.getElementById('save-btn').innerText = "SAQLASH";
         document.getElementById('cancel-btn').style.display = "none";
     }
 </script>
