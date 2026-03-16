@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarpo Admin | Mahsulot Qo'shish</title>
+    <title>Sarpo Admin | Boshqaruv</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -11,70 +11,64 @@
 
     <style>
         :root { --pink: #F48FB1; --dark: #2c3e50; --white: #ffffff; }
-        body { font-family: 'Montserrat', sans-serif; margin: 0; background: #fffafa; display: flex; justify-content: center; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; background: #fffafa; display: flex; flex-direction: column; align-items: center; }
         
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.5s; }
-        .heart-loader { width: 50px; height: 50px; background-color: var(--pink); transform: rotate(45deg); animation: heartBeat 1.2s infinite; position: relative; }
-        .heart-loader::before, .heart-loader::after { content: ""; width: 50px; height: 50px; background-color: var(--pink); border-radius: 50%; position: absolute; }
-        .heart-loader::before { top: -25px; left: 0; }
-        .heart-loader::after { left: -25px; top: 0; }
+        .container { width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        
+        h2, h3 { color: var(--dark); text-align: center; margin-top: 0; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
+        
+        .btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.3s; margin-bottom: 5px; }
+        .btn-save { background: var(--pink); color: white; }
+        .btn-add { background: #fce4ec; color: var(--pink); border: 1px dashed var(--pink); }
+        .btn-edit { background: #3498db; color: white; width: auto; padding: 5px 15px; font-size: 12px; }
+        .btn-delete { background: #e74c3c; color: white; width: auto; padding: 5px 15px; font-size: 12px; }
+
+        /* Mahsulotlar Ro'yxati Stili */
+        .product-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #f0f0f0; }
+        .product-item img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; margin-right: 15px; }
+        .product-info { flex-grow: 1; }
+        .product-info b { display: block; font-size: 14px; }
+        .product-info span { font-size: 12px; color: #888; }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 10000; }
+        .heart-loader { width: 30px; height: 30px; background-color: var(--pink); transform: rotate(45deg); animation: heartBeat 1.2s infinite; position: relative; }
+        .heart-loader::before, .heart-loader::after { content: ""; width: 30px; height: 30px; background-color: var(--pink); border-radius: 50%; position: absolute; }
+        .heart-loader::before { top: -15px; left: 0; }
+        .heart-loader::after { left: -15px; top: 0; }
         @keyframes heartBeat { 0%, 100% { transform: rotate(45deg) scale(0.8); } 50% { transform: rotate(45deg) scale(1); } }
 
-        .container { width: 100%; max-width: 600px; padding: 40px 20px; }
-        .card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); }
-        h2 { color: var(--pink); text-align: center; letter-spacing: 3px; margin-bottom: 30px; }
-        
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; outline: none; font-family: inherit; }
-        input:focus { border-color: var(--pink); }
-        
-        .btn { padding: 16px; border: none; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; transition: 0.3s; margin-bottom: 10px; }
-        .btn-add { background: #fce4ec; color: var(--pink); border: 1px dashed var(--pink); }
-        .btn-save { background: var(--dark); color: white; margin-top: 20px; }
-        
-        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 20px; border-radius: 20px; margin-top: 20px; position: relative; }
-        .remove-btn { position: absolute; top: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
-        
-        .gallery { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
-        .img-card { width: 70px; height: 70px; border-radius: 10px; overflow: hidden; border: 1px solid #eee; }
+        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 15px; border-radius: 15px; margin-bottom: 10px; }
+        .gallery { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+        .img-card { width: 50px; height: 50px; border-radius: 5px; overflow: hidden; border: 1px solid #eee; }
         .img-card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--pink); color: white; padding: 12px 30px; border-radius: 50px; transition: 0.5s; z-index: 10001; box-shadow: 0 5px 15px rgba(244,143,177,0.3); }
-        #toast.show { bottom: 30px; }
     </style>
 </head>
 <body>
 
 <div id="loader"><div class="heart-loader"></div></div>
-<div id="toast">Xabar! ✨</div>
 
 <div class="container">
     <div class="card">
-        <h2>SARPO</h2>
+        <h2 id="form-title">Yangi Mahsulot</h2>
+        <input type="hidden" id="edit-id">
         <input type="text" id="p-name" placeholder="Mahsulot nomi">
-        <input type="number" id="p-price" placeholder="Asosiy narx (so'm)">
+        <input type="number" id="p-price" placeholder="Narxi (so'm)">
         
         <div id="variant-list"></div>
-        
-        <button class="btn btn-add" onclick="addVariant()">+ Rang va rasmlar qo'shish</button>
-        <button class="btn btn-save" onclick="saveData()">BAZAGA SAQLASH</button>
+        <button class="btn btn-add" onclick="addVariant()">+ Rang qo'shish</button>
+        <button class="btn btn-save" onclick="saveData()" id="save-btn">BAZAGA SAQLASH</button>
+        <button class="btn" style="display:none; background:#95a5a6; color:white;" id="cancel-btn" onclick="resetForm()">BEKOR QILISH</button>
+    </div>
+
+    <div class="card">
+        <h3>Barcha Mahsulotlar</h3>
+        <div id="product-list-admin"></div>
     </div>
 </div>
 
 <script>
-    // 1. Kirish paroli (2026)
-    (function() {
-        if (sessionStorage.getItem('sarpo_auth') !== 'true') {
-            const entry = prompt("Parolni kiriting:");
-            if (entry === "2026") {
-                sessionStorage.setItem('sarpo_auth', 'true');
-            } else {
-                alert("Parol xato!");
-                location.reload();
-            }
-        }
-    })();
-
-    // 2. Firebase Init
     const firebaseConfig = {
         apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
         authDomain: "sarpolux.firebaseapp.com",
@@ -86,30 +80,43 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 3. UI logic
-    window.onload = () => {
-        setTimeout(() => {
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
-        }, 800);
-    };
+    // 1. Ma'lumotlarni Real-vaqtda yuklash
+    db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        const list = document.getElementById('product-list-admin');
+        list.innerHTML = "";
+        snapshot.forEach((doc) => {
+            const p = doc.data();
+            const id = doc.id;
+            let img = p.variants?.[0]?.images?.[0] || "";
+            
+            list.innerHTML += `
+                <div class="product-item">
+                    <img src="${img || 'https://via.placeholder.com/50'}" alt="">
+                    <div class="product-info">
+                        <b>${p.name}</b>
+                        <span>${Number(p.price).toLocaleString()} so'm</span>
+                    </div>
+                    <div>
+                        <button class="btn-edit" onclick="editProduct('${id}')">✏️</button>
+                        <button class="btn-delete" onclick="deleteProduct('${id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
 
-    function notify(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    function addVariant() {
-        const vId = Date.now();
+    function addVariant(data = null) {
+        const vId = Date.now() + Math.random();
         const div = document.createElement('div');
         div.className = 'variant-box';
         div.id = `v-${vId}`;
         div.innerHTML = `
-            <span class="remove-btn" onclick="document.getElementById('v-${vId}').remove()">O'chirish</span>
-            <input type="text" placeholder="Rang nomi (masalan: Oq)" class="v-color">
-            <input type="file" multiple accept="image/*" onchange="preview(this, ${vId})" style="font-size:12px;">
-            <div class="gallery" id="gal-${vId}"></div>
+            <input type="text" placeholder="Rang nomi" class="v-color" value="${data?.color || ''}">
+            <input type="file" multiple accept="image/*" onchange="preview(this, '${vId}')" style="font-size:10px">
+            <div class="gallery" id="gal-${vId}">
+                ${(data?.images || []).map(img => `<div class="img-card"><img src="${img}"></div>`).join('')}
+            </div>
+            <button onclick="document.getElementById('v-${vId}').remove()" style="color:red; background:none; border:none; font-size:10px; cursor:pointer">O'chirish</button>
         `;
         document.getElementById('variant-list').appendChild(div);
     }
@@ -128,18 +135,16 @@
         });
     }
 
-    function saveData() {
+    // 2. Saqlash (Yangi yoki Tahrirlangan)
+    async function saveData() {
+        const id = document.getElementById('edit-id').value;
         const name = document.getElementById('p-name').value;
         const price = document.getElementById('p-price').value;
-
-        if(!name || !price) {
-            notify("Ma'lumotlarni to'ldiring! ⚠️");
-            return;
-        }
+        
+        if(!name || !price) return alert("To'ldiring!");
 
         document.getElementById('loader').style.display = 'flex';
-        document.getElementById('loader').style.opacity = '1';
-
+        
         const variants = [];
         document.querySelectorAll('.variant-box').forEach(vBox => {
             const color = vBox.querySelector('.v-color').value;
@@ -148,23 +153,57 @@
             variants.push({ color, images });
         });
 
-        db.collection("products").add({
-            name: name,
-            price: price,
-            variants: variants,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-            notify("Muvaffaqiyatli saqlandi! ✅");
-            setTimeout(() => location.reload(), 1500);
-        })
-        .catch((err) => {
-            console.error(err);
-            notify("Xatolik yuz berdi! ❌");
-            document.getElementById('loader').style.display = 'none';
-        });
+        const productData = {
+            name, price, variants,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if(!id) productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+        try {
+            if(id) {
+                await db.collection("products").doc(id).update(productData);
+            } else {
+                await db.collection("products").add(productData);
+            }
+            resetForm();
+        } catch (e) { alert("Xato!"); }
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    // 3. Tahrirlashga tayyorlash
+    async function editProduct(id) {
+        const doc = await db.collection("products").doc(id).get();
+        const p = doc.data();
+        
+        document.getElementById('edit-id').value = id;
+        document.getElementById('p-name').value = p.name;
+        document.getElementById('p-price').value = p.price;
+        document.getElementById('form-title').innerText = "Tahrirlash";
+        document.getElementById('save-btn').innerText = "O'ZGARISHNI SAQLASH";
+        document.getElementById('cancel-btn').style.display = "block";
+        
+        document.getElementById('variant-list').innerHTML = "";
+        p.variants?.forEach(v => addVariant(v));
+        window.scrollTo(0, 0);
+    }
+
+    // 4. O'chirish
+    async function deleteProduct(id) {
+        if(confirm("Ushbu mahsulotni o'chirasizmi?")) {
+            await db.collection("products").doc(id).delete();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('edit-id').value = "";
+        document.getElementById('p-name').value = "";
+        document.getElementById('p-price').value = "";
+        document.getElementById('variant-list').innerHTML = "";
+        document.getElementById('form-title').innerText = "Yangi Mahsulot";
+        document.getElementById('save-btn').innerText = "BAZAGA SAQLASH";
+        document.getElementById('cancel-btn').style.display = "none";
     }
 </script>
-
 </body>
 </html>
