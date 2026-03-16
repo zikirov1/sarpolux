@@ -442,6 +442,24 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
     }
 
     // MA'LUMOTLARNI YIG'ISH VA SAQLASH
+ <script>
+    // 1. Firebase konfigurasiyasi
+    const firebaseConfig = {
+        apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
+        authDomain: "sarpolux.firebaseapp.com",
+        projectId: "sarpolux",
+        storageBucket: "sarpolux.firebasestorage.app",
+        messagingSenderId: "928140641986",
+        appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
+    };
+
+    // 2. Firebase-ni ishga tushirish
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // 3. Saqlash funksiyasi
     function saveData() {
         const productName = document.getElementById('p-name').value;
         const productBasePrice = document.getElementById('p-price').value;
@@ -454,7 +472,6 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
         document.getElementById('loader').style.display = 'flex';
         document.getElementById('loader').style.opacity = '1';
         
-        // Bu yerda barcha variantlarni massivga yig'amiz
         const variants = [];
         document.querySelectorAll('.variant-box').forEach(vBox => {
             const color = vBox.querySelector('.v-color').value;
@@ -469,39 +486,36 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
                     price: sDiv.querySelector('.s-price').value
                 });
             });
-
             variants.push({ color, price, images, sizes });
         });
 
         const finalData = {
             name: productName,
             basePrice: productBasePrice,
-            variants: variants
+            variants: variants,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        console.log("Saqlanayotgan ma'lumotlar:", finalData);
-// Mavjud mahsulotlar ro'yxatini olish
-let allProducts = JSON.parse(localStorage.getItem('sarpo_products')) || [];
-
-// Yangi mahsulotni qo'shish
-allProducts.push(finalData);
-
-// LocalStoragega qayta saqlash
-// Firebase'ga saqlash
-db.collection("products").add(finalData)
-    .then((docRef) => {
-        console.log("Hujjat ID: ", docRef.id);
-        document.getElementById('loader').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-            notify("Ma'lumotlar bazaga saqlandi! 🔥");
-            setTimeout(() => location.reload(), 1000); // Sahifani yangilash
-        }, 800);
-    })
-    .catch((error) => {
-        console.error("Xatolik: ", error);
-        notify("Xatolik yuz berdi! 🛑");
-    });
+        // Firebase Firestore-ga yozish
+        db.collection("products").add(finalData)
+            .then((docRef) => {
+                console.log("Saqlandi! ID:", docRef.id);
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    notify("Ma'lumotlar bazaga saqlandi! 🔥");
+                    // Tozalash
+                    document.getElementById('p-name').value = '';
+                    document.getElementById('p-price').value = '';
+                    document.getElementById('variant-list').innerHTML = '';
+                }, 800);
+            })
+            .catch((error) => {
+                console.error("Xatolik: ", error);
+                document.getElementById('loader').style.display = 'none';
+                notify("Xatolik yuz berdi! 🛑");
+            });
+    }
 </script>
 
 </body>
