@@ -304,7 +304,21 @@
     </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
+  authDomain: "sarpolux.firebaseapp.com",
+  projectId: "sarpolux",
+  storageBucket: "sarpolux.firebasestorage.app",
+  messagingSenderId: "928140641986",
+  appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
+};
+
+// Firebase'ni ishga tushirish
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zgaruvchi
     // 1. Sahifa yuklanish animatsiyasi
     window.addEventListener('load', () => {
         setTimeout(() => {
@@ -466,16 +480,28 @@
         };
 
         console.log("Saqlanayotgan ma'lumotlar:", finalData);
+// Mavjud mahsulotlar ro'yxatini olish
+let allProducts = JSON.parse(localStorage.getItem('sarpo_products')) || [];
 
-        // Serverga yuborish simulyatsiyasi
+// Yangi mahsulotni qo'shish
+allProducts.push(finalData);
+
+// LocalStoragega qayta saqlash
+// Firebase'ga saqlash
+db.collection("products").add(finalData)
+    .then((docRef) => {
+        console.log("Hujjat ID: ", docRef.id);
+        document.getElementById('loader').style.opacity = '0';
         setTimeout(() => {
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                notify("Hamma o'zgarishlar saqlandi! ✨");
-            }, 800);
-        }, 2000);
-    }
+            document.getElementById('loader').style.display = 'none';
+            notify("Ma'lumotlar bazaga saqlandi! 🔥");
+            setTimeout(() => location.reload(), 1000); // Sahifani yangilash
+        }, 800);
+    })
+    .catch((error) => {
+        console.error("Xatolik: ", error);
+        notify("Xatolik yuz berdi! 🛑");
+    });
 </script>
 
 </body>
