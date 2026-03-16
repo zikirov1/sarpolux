@@ -5,6 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sarpo Admin | Nafis Boshqaruv</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        (function() {
+            const SECRET_PASS = "2026"; // Parolni shu yerdan o'zgartirishingiz mumkin
+            
+            function askPass() {
+                const sessionAuth = sessionStorage.getItem('sarpo_auth');
+                if (sessionAuth !== 'true') {
+                    const entry = prompt("Admin panelga kirish uchun parolni kiriting:");
+                    if (entry === SECRET_PASS) {
+                        sessionStorage.setItem('sarpo_auth', 'true');
+                    } else if (entry === null) {
+                        // Foydalanuvchi "Отмена" bossa
+                        window.location.reload();
+                    } else {
+                        alert("Parol noto'g'ri! 🛑");
+                        document.documentElement.innerHTML = `
+                            <body style="background:#fffafa; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; margin:0;">
+                                <div style="text-align:center; padding:40px; background:white; border-radius:30px; box-shadow:0 20px 60px rgba(0,0,0,0.05);">
+                                    <h1 style="color:#F48FB1;">Kirish rad etildi</h1>
+                                    <p style="color:#2c3e50;">Sizda ushbu sahifani ko'rish huquqi yo'q.</p>
+                                    <button onclick="location.reload()" style="background:#F48FB1; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Qayta urinish</button>
+                                </div>
+                            </body>`;
+                        throw new Error("Unauthorized access");
+                    }
+                }
+            }
+            askPass();
+        })();
+    </script>
+
     <style>
         :root { 
             --pink: #F48FB1; 
@@ -19,7 +51,7 @@
             margin: 0; 
             background: #fffafa; 
             overflow-x: hidden;
-            display: flex; /* Sidebar va Main yonma-yon turishi uchun */
+            display: flex; 
         }
 
         /* --- SIDEBAR --- */
@@ -74,7 +106,7 @@
             box-shadow: 0 10px 20px rgba(244, 143, 177, 0.2);
         }
 
-        /* --- LOADER (Yurakcha animatsiyasi) --- */
+        /* --- LOADER --- */
         #loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -118,7 +150,7 @@
 
         /* --- ASOSIY DIZAYN --- */
         .main-content-wrapper {
-            margin-left: 260px; /* Sidebar kengligi uchun joy */
+            margin-left: 260px;
             width: calc(100% - 260px);
             display: flex;
             justify-content: center;
@@ -229,6 +261,8 @@
         .img-card img { width: 100%; height: 100%; object-fit: cover; }
         .img-card span { position: absolute; top: 0; right: 0; background: var(--pink); color: white; width: 20px; height: 20px; text-align: center; cursor: pointer; font-size: 12px; }
 
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
     </style>
 </head>
 <body>
@@ -242,7 +276,7 @@
 <div class="sidebar">
     <h2>SARPO</h2>
     <button class="menu-btn active" id="btn-p" onclick="switchTab('p')">👗 Mahsulotlar</button>
-    <button class="menu-btn" id="id="btn-s" onclick="openSettings()">⚙️ Sozlamalar</button>
+    <button class="menu-btn" id="btn-s" onclick="openSettings()">⚙️ Sozlamalar</button>
 </div>
 
 <div class="main-content-wrapper">
@@ -265,8 +299,7 @@
         </div>
 
         <div id="sec-settings" style="display:none;">
-            <div id="settings-content">
-                </div>
+            <div id="settings-content"></div>
         </div>
     </div>
 </div>
@@ -297,13 +330,11 @@
         loader.style.display = 'flex';
         loader.style.opacity = '1';
 
-        // Bo'limlarni almashtirish
         document.getElementById('sec-p').style.display = 'none';
         document.getElementById('sec-settings').style.display = 'block';
         
-        // Tugmalar holatini yangilash
         document.getElementById('btn-p').classList.remove('active');
-        document.querySelector('button[onclick="openSettings()"]').classList.add('active');
+        document.getElementById('btn-s').classList.add('active');
 
         try {
             const response = await fetch('settings.html');
@@ -330,7 +361,7 @@
             document.getElementById('sec-p').style.display = 'block';
             document.getElementById('sec-settings').style.display = 'none';
             document.getElementById('btn-p').classList.add('active');
-            document.querySelector('button[onclick="openSettings()"]').classList.remove('active');
+            document.getElementById('btn-s').classList.remove('active');
             notify("Mahsulotlar bo'limi 👗");
         }
     }
@@ -367,9 +398,9 @@
         div.style = "display:flex; gap:10px; margin-bottom:10px; animation: fadeIn 0.4s ease";
         div.id = `s-${sId}`;
         div.innerHTML = `
-            <input type="text" placeholder="48" class="s-name" style="margin:0">
+            <input type="text" placeholder="Razmer" class="s-name" style="margin:0">
             <input type="number" placeholder="Narx" class="s-price" style="margin:0">
-            <button onclick="removeEl('s-${sId}')" style="background:none; border:none; color:#ccc; cursor:pointer">×</button>
+            <button onclick="removeEl('s-${sId}')" style="background:none; border:none; color:#ccc; cursor:pointer; font-size:20px;">×</button>
         `;
         document.getElementById(`sizes-${vId}`).appendChild(div);
     }
@@ -390,15 +421,53 @@
 
     function removeEl(id) {
         const el = document.getElementById(id);
+        if(!el) return;
         el.style.opacity = '0';
         el.style.transform = 'scale(0.9)';
         setTimeout(() => el.remove(), 400);
     }
 
+    // MA'LUMOTLARNI YIG'ISH VA SAQLASH
     function saveData() {
+        const productName = document.getElementById('p-name').value;
+        const productBasePrice = document.getElementById('p-price').value;
+
+        if(!productName) {
+            notify("Iltimos, mahsulot nomini kiriting! ⚠️");
+            return;
+        }
+
         document.getElementById('loader').style.display = 'flex';
         document.getElementById('loader').style.opacity = '1';
         
+        // Bu yerda barcha variantlarni massivga yig'amiz
+        const variants = [];
+        document.querySelectorAll('.variant-box').forEach(vBox => {
+            const color = vBox.querySelector('.v-color').value;
+            const price = vBox.querySelector('.v-price').value;
+            const images = [];
+            vBox.querySelectorAll('.img-card img').forEach(img => images.push(img.src));
+            
+            const sizes = [];
+            vBox.querySelectorAll('[id^="s-"]').forEach(sDiv => {
+                sizes.push({
+                    size: sDiv.querySelector('.s-name').value,
+                    price: sDiv.querySelector('.s-price').value
+                });
+            });
+
+            variants.push({ color, price, images, sizes });
+        });
+
+        const finalData = {
+            name: productName,
+            basePrice: productBasePrice,
+            variants: variants
+        };
+
+        console.log("Saqlanayotgan ma'lumotlar:", finalData);
+
+        // Serverga yuborish simulyatsiyasi
         setTimeout(() => {
             document.getElementById('loader').style.opacity = '0';
             setTimeout(() => {
