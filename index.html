@@ -11,50 +11,53 @@
 
     <style>
         :root { --pink: #F48FB1; --dark: #2c3e50; --bg: #fffafa; }
-        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--bg); color: var(--dark); }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 50px; }
         
-        header { background: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        header h1 { margin: 0; color: var(--pink); letter-spacing: 5px; font-weight: 400; }
+        header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--pink); letter-spacing: 4px; font-size: 22px; }
 
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        
-        /* Mahsulotlar to'plami (Grid) */
-        .product-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-            gap: 25px; 
-        }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
 
         .product-card { 
-            background: white; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.03);
-            transition: 0.3s;
+            background: white; border-radius: 25px; overflow: hidden; 
+            margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             border: 1px solid #f0f0f0;
         }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
 
-        .product-img { width: 100%; height: 300px; object-fit: cover; background: #eee; }
-        
-        .product-info { padding: 20px; text-align: center; }
-        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 10px; display: block; }
-        .product-price { color: var(--pink); font-size: 20px; font-weight: 700; }
-        
+        /* Asosiy rasm slideri */
+        .img-container { position: relative; width: 100%; aspect-ratio: 4/5; background: #eee; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .product-info { padding: 20px; }
+        .price-tag { color: var(--pink); font-size: 22px; font-weight: 700; display: block; margin-bottom: 5px; }
+        .product-name { font-size: 18px; font-weight: 600; color: var(--dark); margin-bottom: 15px; display: block; }
+
+        /* Ranglar (Variants) tugmalari */
+        .variant-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .v-chip { 
+            padding: 8px 15px; border-radius: 20px; border: 1px solid #eee; 
+            font-size: 13px; cursor: pointer; transition: 0.3s; background: #fdfdfd;
+        }
+        .v-chip.active { background: var(--pink); color: white; border-color: var(--pink); }
+
+        /* Kichik rasmlar (Thumbnails) */
+        .thumb-gallery { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .thumb-gallery img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid transparent; cursor: pointer; }
+        .thumb-gallery img.active { border-color: var(--pink); }
+
         .buy-btn { 
-            display: block; width: 100%; padding: 12px; background: var(--pink); 
-            color: white; text-decoration: none; border-radius: 0 0 20px 20px; 
-            text-align: center; font-weight: 600; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 15px; background: var(--pink); 
+            color: white; text-decoration: none; border-radius: 15px; 
+            font-weight: 600; font-size: 16px;
         }
 
-        #empty-msg { text-align: center; padding: 50px; color: #999; display: none; }
-
-        /* Loader */
-        #main-loader { display: flex; justify-content: center; padding: 50px; }
-        .dot { width: 10px; height: 10px; background: var(--pink); border-radius: 50%; margin: 5px; animation: bounce 0.5s infinite alternate; }
-        .dot:nth-child(2) { animation-delay: 0.1s; }
-        .dot:nth-child(3) { animation-delay: 0.2s; }
-        @keyframes bounce { to { transform: translateY(-10px); } }
+        #main-loader { display: flex; justify-content: center; padding: 100px 0; }
+        .heart-loading { width: 30px; height: 30px; background: var(--pink); transform: rotate(45deg); animation: beat 0.8s infinite; position: relative; }
+        .heart-loading::before, .heart-loading::after { content: ""; width: 30px; height: 30px; background: var(--pink); border-radius: 50%; position: absolute; }
+        .heart-loading::before { top: -15px; left: 0; }
+        .heart-loading::after { left: -15px; top: 0; }
+        @keyframes beat { 0%, 100% { transform: rotate(45deg) scale(0.8); } 50% { transform: rotate(45deg) scale(1.1); } }
     </style>
 </head>
 <body>
@@ -64,16 +67,11 @@
 </header>
 
 <div class="container">
-    <div id="main-loader">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-    
-    <div id="empty-msg">Hozircha mahsulotlar yo'q... 🌸</div>
-    <div class="product-grid" id="products-container"></div>
+    <div id="main-loader"><div class="heart-loading"></div></div>
+    <div id="products-container"></div>
 </div>
 
 <script>
-    // 1. Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
         authDomain: "sarpolux.firebaseapp.com",
@@ -86,45 +84,110 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 2. Mahsulotlarni yuklash
-    const container = document.getElementById('products-container');
-    const loader = document.getElementById('main-loader');
-    const emptyMsg = document.getElementById('empty-msg');
-
-    // Firestore'dan real-time ma'lumot olish
     db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-        container.innerHTML = ""; // Oldingilarni tozalash
+        const container = document.getElementById('products-container');
+        const loader = document.getElementById('main-loader');
+        container.innerHTML = "";
         loader.style.display = "none";
-
-        if (snapshot.empty) {
-            emptyMsg.style.display = "block";
-            return;
-        }
-
-        emptyMsg.style.display = "none";
 
         snapshot.forEach((doc) => {
             const p = doc.data();
-            
-            // Birinchi variantdagi birinchi rasmni olish (agar bo'lsa)
-            let mainImg = "https://via.placeholder.com/300x400?text=Sarpo";
-            if (p.variants && p.variants[0] && p.variants[0].images && p.variants[0].images[0]) {
-                mainImg = p.variants[0].images[0];
-            }
-
-            const card = `
-                <div class="product-card">
-                    <img src="${mainImg}" class="product-img" alt="${p.name}">
-                    <div class="product-info">
-                        <span class="product-name">${p.name}</span>
-                        <span class="product-price">${Number(p.price).toLocaleString()} so'm</span>
-                    </div>
-                    <a href="https://t.me/YANGIYOLLIKLAR_BOZORI" target="_blank" class="buy-btn">BUYURTMA BERISH</a>
-                </div>
-            `;
-            container.innerHTML += card;
+            const pId = doc.id;
+            const card = createProductCard(p, pId);
+            container.appendChild(card);
         });
     });
+
+    function createProductCard(p, pId) {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        // Dastlabki ma'lumotlar (birinchi rang va birinchi rasm)
+        let currentVariantIndex = 0;
+        const variants = p.variants || [];
+
+        const renderContent = () => {
+            const currentVariant = variants[currentVariantIndex] || { color: '', images: [] };
+            const mainImg = currentVariant.images[0] || 'https://via.placeholder.com/400x500';
+
+            card.innerHTML = `
+                <div class="img-container">
+                    <img src="${mainImg}" id="main-img-${pId}">
+                </div>
+                <div class="product-info">
+                    <span class="price-tag">${Number(p.price).toLocaleString()} so'm</span>
+                    <span class="product-name">${p.name}</span>
+                    
+                    ${variants.length > 0 ? `
+                        <div class="variant-selector">
+                            ${variants.map((v, i) => `
+                                <div class="v-chip ${i === currentVariantIndex ? 'active' : ''}" 
+                                     onclick="window.changeVariant('${pId}', ${i})">
+                                    ${v.color || (i+1)+'-rang'}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="thumb-gallery" id="thumbs-${pId}">
+                            ${currentVariant.images.map((img, i) => `
+                                <img src="${img}" class="${i === 0 ? 'active' : ''}" 
+                                     onclick="window.changeImage('${pId}', this)">
+                            `).join('')}
+                        </div>
+                    ` : ''}
+
+                    <a href="https://t.me/YANGIYOLLIKLAR_BOZORI" target="_blank" class="buy-btn">
+                        <span>🛒 BUYURTMA BERISH</span>
+                    </a>
+                </div>
+            `;
+        };
+
+        // Global funksiyalar (faqat bir marta e'lon qilinadi)
+        window.changeVariant = (id, index) => {
+            // Bu yerda biz qayta render qilish o'rniga, snapshot orqali kelgan ma'lumotni saqlab qolgan holda ishlashimiz kerak.
+            // Soddalik uchun hozircha mahsulotlarni ob'ektda saqlab turamiz.
+            location.reload(); // Yoki murakkabroq state boshqaruvi
+        };
+
+        // Rang o'zgarganda rasmlarni yangilash funksiyasi
+        window.updateProductUI = (id, vIdx) => {
+            // Bu qismni dinamik qilish uchun kichik helper
+        };
+
+        renderContent();
+        return card;
+    }
+
+    // Rasmni almashtirish funksiyasi
+    window.changeImage = (pId, el) => {
+        document.getElementById(`main-img-${pId}`).src = el.src;
+        const thumbs = document.getElementById(`thumbs-${pId}`).querySelectorAll('img');
+        thumbs.forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    };
+
+    // Variantni almashtirish (Sahifani yangilamasdan ishlashi uchun)
+    window.changeVariant = (pId, vIdx) => {
+        // Ma'lumotni qayta yuklash o'rniga UI-ni yangilash
+        // Amalda bu yerda State-management kerak, lekin hozircha sodda yo'li:
+        db.collection("products").doc(pId).get().then(doc => {
+            const p = doc.data();
+            const variant = p.variants[vIdx];
+            document.getElementById(`main-img-${pId}`).src = variant.images[0];
+            
+            // Tugmalarni yangilash
+            const card = document.getElementById(`main-img-${pId}`).closest('.product-card');
+            const chips = card.querySelectorAll('.v-chip');
+            chips.forEach((c, i) => i === vIdx ? c.classList.add('active') : c.classList.remove('active'));
+
+            // Galereyani yangilash
+            const thumbGallery = card.querySelector('.thumb-gallery');
+            thumbGallery.innerHTML = variant.images.map((img, i) => `
+                <img src="${img}" class="${i === 0 ? 'active' : ''}" 
+                     onclick="window.changeImage('${pId}', this)">
+            `).join('');
+        });
+    };
 </script>
 
 </body>
