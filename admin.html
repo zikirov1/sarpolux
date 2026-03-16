@@ -3,57 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarpo Admin | Nafis Boshqaruv</title>
+    <title>Sarpo Admin | Mahsulot Qo'shish</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { 
-            --pink: #F48FB1; 
-            --soft-pink: #fce4ec;
-            --dark: #2c3e50; 
-            --white: #ffffff;
-            --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            margin: 0; 
-            background: #fffafa; 
-            overflow-x: hidden;
-            display: flex; 
-        }
-
-        /* Sidebar, Loader va boshqa stillar */
-        .sidebar { width: 260px; background: var(--dark); height: 100vh; position: fixed; left: 0; top: 0; padding: 40px 20px; box-sizing: border-box; color: white; z-index: 1000; }
-        .sidebar h2 { color: var(--pink); letter-spacing: 4px; text-align: center; margin-bottom: 50px; }
-        .menu-btn { width: 100%; padding: 15px; background: transparent; border: none; color: #bdc3c7; text-align: left; cursor: pointer; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-        .menu-btn.active { background: var(--pink); color: white; }
-
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.8s ease; }
+        :root { --pink: #F48FB1; --dark: #2c3e50; --white: #ffffff; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; background: #fffafa; display: flex; justify-content: center; }
+        
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.5s; }
         .heart-loader { width: 50px; height: 50px; background-color: var(--pink); transform: rotate(45deg); animation: heartBeat 1.2s infinite; position: relative; }
         .heart-loader::before, .heart-loader::after { content: ""; width: 50px; height: 50px; background-color: var(--pink); border-radius: 50%; position: absolute; }
         .heart-loader::before { top: -25px; left: 0; }
         .heart-loader::after { left: -25px; top: 0; }
-        @keyframes heartBeat { 0%, 10%, 50%, 100% { transform: rotate(45deg) scale(0.8); } 15% { transform: rotate(45deg) scale(1); } }
+        @keyframes heartBeat { 0%, 100% { transform: rotate(45deg) scale(0.8); } 50% { transform: rotate(45deg) scale(1); } }
 
-        .main-content-wrapper { margin-left: 260px; width: calc(100% - 260px); display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 800px; padding: 40px 20px; opacity: 0; transform: translateY(20px); transition: var(--transition); }
-        .container.loaded { opacity: 1; transform: translateY(0); }
-        .card { background: var(--white); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); border: 1px solid rgba(244, 143, 177, 0.1); margin-bottom: 30px; }
-        input { width: 100%; padding: 18px; border: 1px solid #f0f0f0; border-radius: 15px; margin-bottom: 20px; box-sizing: border-box; outline: none; }
-        .btn { padding: 16px 30px; border: none; border-radius: 15px; cursor: pointer; font-weight: 600; width: 100%; display: block; }
-        .btn-add { background: var(--soft-pink); color: var(--pink); margin-bottom: 20px; }
-        .btn-save { background: var(--dark); color: white; margin-top: 30px; }
-        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 30px; border-radius: 25px; margin-top: 25px; }
-        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--pink); color: white; padding: 15px 40px; border-radius: 50px; font-weight: 600; transition: var(--transition); z-index: 10001; }
-        #toast.show { bottom: 40px; }
-        .gallery { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
-        .img-card { width: 80px; height: 100px; border-radius: 12px; overflow: hidden; position: relative; }
+        .container { width: 100%; max-width: 600px; padding: 40px 20px; }
+        .card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); }
+        h2 { color: var(--pink); text-align: center; letter-spacing: 3px; margin-bottom: 30px; }
+        
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; outline: none; font-family: inherit; }
+        input:focus { border-color: var(--pink); }
+        
+        .btn { padding: 16px; border: none; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; transition: 0.3s; margin-bottom: 10px; }
+        .btn-add { background: #fce4ec; color: var(--pink); border: 1px dashed var(--pink); }
+        .btn-save { background: var(--dark); color: white; margin-top: 20px; }
+        
+        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 20px; border-radius: 20px; margin-top: 20px; position: relative; }
+        .remove-btn { position: absolute; top: 10px; right: 10px; color: #ccc; cursor: pointer; font-size: 12px; }
+        
+        .gallery { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .img-card { width: 70px; height: 70px; border-radius: 10px; overflow: hidden; border: 1px solid #eee; }
         .img-card img { width: 100%; height: 100%; object-fit: cover; }
-        .img-card span { position: absolute; top: 0; right: 0; background: var(--pink); color: white; width: 20px; height: 20px; text-align: center; cursor: pointer; }
+        
+        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--pink); color: white; padding: 12px 30px; border-radius: 50px; transition: 0.5s; z-index: 10001; box-shadow: 0 5px 15px rgba(244,143,177,0.3); }
+        #toast.show { bottom: 30px; }
     </style>
 </head>
 <body>
@@ -61,45 +47,28 @@
 <div id="loader"><div class="heart-loader"></div></div>
 <div id="toast">Xabar! ✨</div>
 
-<div class="sidebar">
-    <h2>SARPO</h2>
-    <button class="menu-btn active" id="btn-p" onclick="switchTab('p')">👗 Mahsulotlar</button>
-    <button class="menu-btn" id="btn-s" onclick="openSettings()">⚙️ Sozlamalar</button>
-</div>
-
-<div class="main-content-wrapper">
-    <div class="container" id="main-content">
-        <div class="header" style="text-align:center; margin-bottom:50px;">
-            <h1>SARPO</h1>
-            <p style="color: #999; font-size: 12px;">ADMIN BOSHQARUVI</p>
-        </div>
-
-        <div id="sec-p">
-            <div class="card">
-                <input type="text" id="p-name" placeholder="Mahsulot nomi">
-                <input type="number" id="p-price" placeholder="Asosiy narx">
-                <div id="variant-list"></div>
-                <button class="btn btn-add" onclick="addVariant()">+ Rang va rasmlarni kiritish</button>
-                <button class="btn btn-save" onclick="saveData()">SAQLASH</button>
-            </div>
-        </div>
-
-        <div id="sec-settings" style="display:none;">
-            <div id="settings-content"></div>
-        </div>
+<div class="container">
+    <div class="card">
+        <h2>SARPO</h2>
+        <input type="text" id="p-name" placeholder="Mahsulot nomi">
+        <input type="number" id="p-price" placeholder="Asosiy narx (so'm)">
+        
+        <div id="variant-list"></div>
+        
+        <button class="btn btn-add" onclick="addVariant()">+ Rang va rasmlar qo'shish</button>
+        <button class="btn btn-save" onclick="saveData()">BAZAGA SAQLASH</button>
     </div>
 </div>
 
 <script>
-    // 1. Kirish paroli
+    // 1. Kirish paroli (2026)
     (function() {
-        const SECRET_PASS = "2026";
         if (sessionStorage.getItem('sarpo_auth') !== 'true') {
-            const entry = prompt("Admin panelga kirish uchun parolni kiriting:");
-            if (entry === SECRET_PASS) {
+            const entry = prompt("Parolni kiriting:");
+            if (entry === "2026") {
                 sessionStorage.setItem('sarpo_auth', 'true');
             } else {
-                alert("Parol noto'g'ri! 🛑");
+                alert("Parol xato!");
                 location.reload();
             }
         }
@@ -118,32 +87,17 @@
     const db = firebase.firestore();
 
     // 3. UI logic
-    window.addEventListener('load', () => {
+    window.onload = () => {
         setTimeout(() => {
             document.getElementById('loader').style.opacity = '0';
-            document.getElementById('main-content').classList.add('loaded');
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
-        }, 1000);
-    });
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+        }, 800);
+    };
 
     function notify(msg) {
         const t = document.getElementById('toast');
         t.innerText = msg; t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    function switchTab(tab) {
-        if(tab === 'p') {
-            document.getElementById('sec-p').style.display = 'block';
-            document.getElementById('sec-settings').style.display = 'none';
-            document.getElementById('btn-p').classList.add('active');
-            document.getElementById('btn-s').classList.remove('active');
-        }
-    }
-
-    async function openSettings() {
-        notify("Sozlamalar yuklanmoqda...");
-        // settings.html yuklash logikasi (ixtiyoriy)
     }
 
     function addVariant() {
@@ -152,85 +106,61 @@
         div.className = 'variant-box';
         div.id = `v-${vId}`;
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px">
-                <span style="color:var(--pink); font-weight:600">Rang to'plami</span>
-                <span style="cursor:pointer; color:#ccc" onclick="removeEl('v-${vId}')">O'chirish</span>
-            </div>
-            <input type="text" placeholder="Rang nomi" class="v-color">
-            <input type="number" placeholder="Rang narxi" class="v-price">
-            <input type="file" multiple accept="image/*" onchange="previewImgs(this, ${vId})" id="f-${vId}" style="display:none">
-            <button class="btn" style="background:#fff; border:1px dashed var(--pink); color:var(--pink);" onclick="document.getElementById('f-${vId}').click()">+ Rasmlar</button>
+            <span class="remove-btn" onclick="document.getElementById('v-${vId}').remove()">O'chirish</span>
+            <input type="text" placeholder="Rang nomi (masalan: Oq)" class="v-color">
+            <input type="file" multiple accept="image/*" onchange="preview(this, ${vId})" style="font-size:12px;">
             <div class="gallery" id="gal-${vId}"></div>
-            <div id="sizes-${vId}"></div>
-            <button class="btn" style="background:none; color:var(--pink); text-decoration:underline" onclick="addSize(${vId})">+ Razmer qo'shish</button>
         `;
         document.getElementById('variant-list').appendChild(div);
     }
 
-    function addSize(vId) {
-        const sId = Date.now();
-        const div = document.createElement('div');
-        div.style = "display:flex; gap:10px; margin-bottom:10px;";
-        div.id = `s-${sId}`;
-        div.innerHTML = `<input type="text" placeholder="Razmer" class="s-name" style="margin:0"><input type="number" placeholder="Narx" class="s-price" style="margin:0"><button onclick="removeEl('s-${sId}')">×</button>`;
-        document.getElementById(`sizes-${vId}`).appendChild(div);
-    }
-
-    function previewImgs(input, vId) {
+    function preview(input, vId) {
         const gal = document.getElementById(`gal-${vId}`);
         Array.from(input.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const d = document.createElement('div');
                 d.className = 'img-card';
-                d.innerHTML = `<img src="${e.target.result}"><span onclick="this.parentElement.remove()">×</span>`;
+                d.innerHTML = `<img src="${e.target.result}">`;
                 gal.appendChild(d);
             };
             reader.readAsDataURL(file);
         });
     }
 
-    function removeEl(id) { document.getElementById(id).remove(); }
-
     function saveData() {
-        const productName = document.getElementById('p-name').value;
-        const productBasePrice = document.getElementById('p-price').value;
+        const name = document.getElementById('p-name').value;
+        const price = document.getElementById('p-price').value;
 
-        if(!productName) { notify("Mahsulot nomini kiriting! ⚠️"); return; }
+        if(!name || !price) {
+            notify("Ma'lumotlarni to'ldiring! ⚠️");
+            return;
+        }
 
         document.getElementById('loader').style.display = 'flex';
         document.getElementById('loader').style.opacity = '1';
-        
+
         const variants = [];
         document.querySelectorAll('.variant-box').forEach(vBox => {
             const color = vBox.querySelector('.v-color').value;
-            const price = vBox.querySelector('.v-price').value;
             const images = [];
             vBox.querySelectorAll('.img-card img').forEach(img => images.push(img.src));
-            
-            const sizes = [];
-            vBox.querySelectorAll('[id^="s-"]').forEach(sDiv => {
-                sizes.push({
-                    size: sDiv.querySelector('.s-name').value,
-                    price: sDiv.querySelector('.s-price').value
-                });
-            });
-            variants.push({ color, price, images, sizes });
+            variants.push({ color, images });
         });
 
         db.collection("products").add({
-            name: productName,
-            basePrice: productBasePrice,
+            name: name,
+            price: price,
             variants: variants,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         })
         .then(() => {
-            notify("Bazaga saqlandi! 🔥");
+            notify("Muvaffaqiyatli saqlandi! ✅");
             setTimeout(() => location.reload(), 1500);
         })
         .catch((err) => {
             console.error(err);
-            notify("Xatolik bo'ldi! 🛑");
+            notify("Xatolik yuz berdi! ❌");
             document.getElementById('loader').style.display = 'none';
         });
     }
