@@ -11,47 +11,49 @@
 
     <style>
         :root { --pink: #F48FB1; --dark: #2c3e50; --bg: #fffafa; }
-        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 50px; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 50px; -webkit-tap-highlight-color: transparent; }
         
         header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         header h1 { margin: 0; color: var(--pink); letter-spacing: 4px; font-size: 22px; }
 
-        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
 
         .product-card { 
             background: white; border-radius: 25px; overflow: hidden; 
-            margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
             border: 1px solid #f0f0f0;
         }
 
-        /* Asosiy rasm slideri */
-        .img-container { position: relative; width: 100%; aspect-ratio: 4/5; background: #eee; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .img-container { width: 100%; aspect-ratio: 4/5; background: #f9f9f9; overflow: hidden; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s opacity; }
 
-        .product-info { padding: 20px; }
+        .product-info { padding: 15px; }
         .price-tag { color: var(--pink); font-size: 22px; font-weight: 700; display: block; margin-bottom: 5px; }
-        .product-name { font-size: 18px; font-weight: 600; color: var(--dark); margin-bottom: 15px; display: block; }
+        .product-name { font-size: 17px; font-weight: 600; color: var(--dark); margin-bottom: 15px; display: block; }
 
-        /* Ranglar (Variants) tugmalari */
-        .variant-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        /* Ranglar selectori */
+        .variant-selector { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .v-chip { 
-            padding: 8px 15px; border-radius: 20px; border: 1px solid #eee; 
-            font-size: 13px; cursor: pointer; transition: 0.3s; background: #fdfdfd;
+            padding: 7px 14px; border-radius: 12px; border: 1px solid #eee; 
+            font-size: 12px; cursor: pointer; transition: 0.2s; background: #fff;
         }
         .v-chip.active { background: var(--pink); color: white; border-color: var(--pink); }
 
-        /* Kichik rasmlar (Thumbnails) */
-        .thumb-gallery { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
-        .thumb-gallery img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid transparent; cursor: pointer; }
+        /* Thumbnail galereyasi */
+        .thumb-gallery { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 12px; scrollbar-width: none; }
+        .thumb-gallery::-webkit-scrollbar { display: none; }
+        .thumb-gallery img { width: 55px; height: 55px; border-radius: 10px; object-fit: cover; border: 2px solid transparent; flex-shrink: 0; }
         .thumb-gallery img.active { border-color: var(--pink); }
 
         .buy-btn { 
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; padding: 15px; background: var(--pink); 
+            width: 100%; padding: 14px; background: var(--pink); 
             color: white; text-decoration: none; border-radius: 15px; 
-            font-weight: 600; font-size: 16px;
+            font-weight: 600; font-size: 15px; transition: 0.2s;
         }
+        .buy-btn:active { transform: scale(0.97); }
 
+        /* Loader */
         #main-loader { display: flex; justify-content: center; padding: 100px 0; }
         .heart-loading { width: 30px; height: 30px; background: var(--pink); transform: rotate(45deg); animation: beat 0.8s infinite; position: relative; }
         .heart-loading::before, .heart-loading::after { content: ""; width: 30px; height: 30px; background: var(--pink); border-radius: 50%; position: absolute; }
@@ -84,6 +86,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Bazadagi ma'lumotlarni xotirada ushlab turish uchun
+    let productsCache = {};
+
+    // 1. Ma'lumotlarni o'qish
     db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
         const container = document.getElementById('products-container');
         const loader = document.getElementById('main-loader');
@@ -92,101 +98,85 @@
 
         snapshot.forEach((doc) => {
             const p = doc.data();
-            const pId = doc.id;
-            const card = createProductCard(p, pId);
+            const id = doc.id;
+            productsCache[id] = p; // Keshga saqlash
+            
+            const card = createCard(p, id);
             container.appendChild(card);
         });
     });
 
-    function createProductCard(p, pId) {
-        const card = document.createElement('div');
-        card.className = 'product-card';
+    // 2. Card yaratish
+    function createCard(p, id) {
+        const div = document.createElement('div');
+        div.className = 'product-card';
+        div.id = `card-${id}`;
         
-        // Dastlabki ma'lumotlar (birinchi rang va birinchi rasm)
-        let currentVariantIndex = 0;
         const variants = p.variants || [];
+        const firstVar = variants[0] || { color: '', images: [] };
+        const firstImg = firstVar.images[0] || 'https://via.placeholder.com/400x500';
 
-        const renderContent = () => {
-            const currentVariant = variants[currentVariantIndex] || { color: '', images: [] };
-            const mainImg = currentVariant.images[0] || 'https://via.placeholder.com/400x500';
+        div.innerHTML = `
+            <div class="img-container">
+                <img src="${firstImg}" id="main-img-${id}">
+            </div>
+            <div class="product-info">
+                <span class="price-tag">${Number(p.price).toLocaleString()} so'm</span>
+                <b class="product-name">${p.name}</b>
+                
+                ${variants.length > 0 ? `
+                    <div class="variant-selector">
+                        ${variants.map((v, i) => `
+                            <div class="v-chip ${i === 0 ? 'active' : ''}" 
+                                 onclick="selectVariant('${id}', ${i})">
+                                ${v.color || (i+1)+'-rang'}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="thumb-gallery" id="thumbs-${id}">
+                        ${firstVar.images.map((img, i) => `
+                            <img src="${img}" class="${i === 0 ? 'active' : ''}" 
+                                 onclick="selectImage('${id}', this)">
+                        `).join('')}
+                    </div>
+                ` : ''}
 
-            card.innerHTML = `
-                <div class="img-container">
-                    <img src="${mainImg}" id="main-img-${pId}">
-                </div>
-                <div class="product-info">
-                    <span class="price-tag">${Number(p.price).toLocaleString()} so'm</span>
-                    <span class="product-name">${p.name}</span>
-                    
-                    ${variants.length > 0 ? `
-                        <div class="variant-selector">
-                            ${variants.map((v, i) => `
-                                <div class="v-chip ${i === currentVariantIndex ? 'active' : ''}" 
-                                     onclick="window.changeVariant('${pId}', ${i})">
-                                    ${v.color || (i+1)+'-rang'}
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="thumb-gallery" id="thumbs-${pId}">
-                            ${currentVariant.images.map((img, i) => `
-                                <img src="${img}" class="${i === 0 ? 'active' : ''}" 
-                                     onclick="window.changeImage('${pId}', this)">
-                            `).join('')}
-                        </div>
-                    ` : ''}
-
-                    <a href="https://t.me/YANGIYOLLIKLAR_BOZORI" target="_blank" class="buy-btn">
-                        <span>🛒 BUYURTMA BERISH</span>
-                    </a>
-                </div>
-            `;
-        };
-
-        // Global funksiyalar (faqat bir marta e'lon qilinadi)
-        window.changeVariant = (id, index) => {
-            // Bu yerda biz qayta render qilish o'rniga, snapshot orqali kelgan ma'lumotni saqlab qolgan holda ishlashimiz kerak.
-            // Soddalik uchun hozircha mahsulotlarni ob'ektda saqlab turamiz.
-            location.reload(); // Yoki murakkabroq state boshqaruvi
-        };
-
-        // Rang o'zgarganda rasmlarni yangilash funksiyasi
-        window.updateProductUI = (id, vIdx) => {
-            // Bu qismni dinamik qilish uchun kichik helper
-        };
-
-        renderContent();
-        return card;
+                <a href="https://t.me/YANGIYOLLIKLAR_BOZORI" target="_blank" class="buy-btn">
+                    🛒 BUYURTMA BERISH
+                </a>
+            </div>
+        `;
+        return div;
     }
 
-    // Rasmni almashtirish funksiyasi
-    window.changeImage = (pId, el) => {
-        document.getElementById(`main-img-${pId}`).src = el.src;
-        const thumbs = document.getElementById(`thumbs-${pId}`).querySelectorAll('img');
-        thumbs.forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
+    // 3. Rangni tanlash (Refreshsiz)
+    window.selectVariant = (id, vIdx) => {
+        const p = productsCache[id];
+        const variant = p.variants[vIdx];
+        const card = document.getElementById(`card-${id}`);
+
+        // Asosiy rasmni yangilash
+        document.getElementById(`main-img-${id}`).src = variant.images[0];
+
+        // Tugmalar klassini yangilash
+        card.querySelectorAll('.v-chip').forEach((btn, i) => {
+            btn.classList.toggle('active', i === vIdx);
+        });
+
+        // Galereyani yangilash
+        const gallery = document.getElementById(`thumbs-${id}`);
+        gallery.innerHTML = variant.images.map((img, i) => `
+            <img src="${img}" class="${i === 0 ? 'active' : ''}" 
+                 onclick="selectImage('${id}', this)">
+        `).join('');
     };
 
-    // Variantni almashtirish (Sahifani yangilamasdan ishlashi uchun)
-    window.changeVariant = (pId, vIdx) => {
-        // Ma'lumotni qayta yuklash o'rniga UI-ni yangilash
-        // Amalda bu yerda State-management kerak, lekin hozircha sodda yo'li:
-        db.collection("products").doc(pId).get().then(doc => {
-            const p = doc.data();
-            const variant = p.variants[vIdx];
-            document.getElementById(`main-img-${pId}`).src = variant.images[0];
-            
-            // Tugmalarni yangilash
-            const card = document.getElementById(`main-img-${pId}`).closest('.product-card');
-            const chips = card.querySelectorAll('.v-chip');
-            chips.forEach((c, i) => i === vIdx ? c.classList.add('active') : c.classList.remove('active'));
-
-            // Galereyani yangilash
-            const thumbGallery = card.querySelector('.thumb-gallery');
-            thumbGallery.innerHTML = variant.images.map((img, i) => `
-                <img src="${img}" class="${i === 0 ? 'active' : ''}" 
-                     onclick="window.changeImage('${pId}', this)">
-            `).join('');
-        });
+    // 4. Rasmni tanlash (Refreshsiz)
+    window.selectImage = (id, el) => {
+        document.getElementById(`main-img-${id}`).src = el.src;
+        const gallery = document.getElementById(`thumbs-${id}`);
+        gallery.querySelectorAll('img').forEach(img => img.classList.remove('active'));
+        el.classList.add('active');
     };
 </script>
 
