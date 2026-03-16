@@ -6,36 +6,8 @@
     <title>Sarpo Admin | Nafis Boshqaruv</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     
-    <script>
-        (function() {
-            const SECRET_PASS = "2026"; // Parolni shu yerdan o'zgartirishingiz mumkin
-            
-            function askPass() {
-                const sessionAuth = sessionStorage.getItem('sarpo_auth');
-                if (sessionAuth !== 'true') {
-                    const entry = prompt("Admin panelga kirish uchun parolni kiriting:");
-                    if (entry === SECRET_PASS) {
-                        sessionStorage.setItem('sarpo_auth', 'true');
-                    } else if (entry === null) {
-                        // Foydalanuvchi "Отмена" bossa
-                        window.location.reload();
-                    } else {
-                        alert("Parol noto'g'ri! 🛑");
-                        document.documentElement.innerHTML = `
-                            <body style="background:#fffafa; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; margin:0;">
-                                <div style="text-align:center; padding:40px; background:white; border-radius:30px; box-shadow:0 20px 60px rgba(0,0,0,0.05);">
-                                    <h1 style="color:#F48FB1;">Kirish rad etildi</h1>
-                                    <p style="color:#2c3e50;">Sizda ushbu sahifani ko'rish huquqi yo'q.</p>
-                                    <button onclick="location.reload()" style="background:#F48FB1; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Qayta urinish</button>
-                                </div>
-                            </body>`;
-                        throw new Error("Unauthorized access");
-                    }
-                }
-            }
-            askPass();
-        })();
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root { 
@@ -54,223 +26,39 @@
             display: flex; 
         }
 
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: 260px;
-            background: var(--dark);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            padding: 40px 20px;
-            box-sizing: border-box;
-            color: white;
-            z-index: 1000;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.05);
-        }
+        /* Sidebar, Loader va boshqa stillar */
+        .sidebar { width: 260px; background: var(--dark); height: 100vh; position: fixed; left: 0; top: 0; padding: 40px 20px; box-sizing: border-box; color: white; z-index: 1000; }
+        .sidebar h2 { color: var(--pink); letter-spacing: 4px; text-align: center; margin-bottom: 50px; }
+        .menu-btn { width: 100%; padding: 15px; background: transparent; border: none; color: #bdc3c7; text-align: left; cursor: pointer; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+        .menu-btn.active { background: var(--pink); color: white; }
 
-        .sidebar h2 {
-            font-weight: 400;
-            letter-spacing: 4px;
-            text-align: center;
-            margin-bottom: 50px;
-            color: var(--pink);
-        }
-
-        .menu-btn {
-            width: 100%;
-            padding: 15px;
-            background: transparent;
-            border: none;
-            color: #bdc3c7;
-            text-align: left;
-            font-family: inherit;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .menu-btn:hover {
-            color: var(--pink);
-            background: rgba(255,255,255,0.05);
-        }
-
-        .menu-btn.active {
-            background: var(--pink);
-            color: white;
-            box-shadow: 0 10px 20px rgba(244, 143, 177, 0.2);
-        }
-
-        /* --- LOADER --- */
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--white);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: opacity 0.8s ease;
-        }
-
-        .heart-loader {
-            width: 50px;
-            height: 50px;
-            background-color: var(--pink);
-            transform: rotate(45deg);
-            animation: heartBeat 1.2s infinite;
-            position: relative;
-        }
-
-        .heart-loader::before, .heart-loader::after {
-            content: "";
-            width: 50px;
-            height: 50px;
-            background-color: var(--pink);
-            border-radius: 50%;
-            position: absolute;
-        }
-
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.8s ease; }
+        .heart-loader { width: 50px; height: 50px; background-color: var(--pink); transform: rotate(45deg); animation: heartBeat 1.2s infinite; position: relative; }
+        .heart-loader::before, .heart-loader::after { content: ""; width: 50px; height: 50px; background-color: var(--pink); border-radius: 50%; position: absolute; }
         .heart-loader::before { top: -25px; left: 0; }
         .heart-loader::after { left: -25px; top: 0; }
+        @keyframes heartBeat { 0%, 10%, 50%, 100% { transform: rotate(45deg) scale(0.8); } 15% { transform: rotate(45deg) scale(1); } }
 
-        @keyframes heartBeat {
-            0% { transform: rotate(45deg) scale(0.8); }
-            5% { transform: rotate(45deg) scale(0.9); }
-            10% { transform: rotate(45deg) scale(0.8); }
-            15% { transform: rotate(45deg) scale(1); }
-            50% { transform: rotate(45deg) scale(0.8); }
-            100% { transform: rotate(45deg) scale(0.8); }
-        }
-
-        /* --- ASOSIY DIZAYN --- */
-        .main-content-wrapper {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            padding: 40px 20px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: var(--transition);
-        }
-
-        .container.loaded {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .header h1 {
-            color: var(--dark);
-            letter-spacing: 5px;
-            font-weight: 400;
-            margin: 0;
-        }
-
-        .card { 
-            background: var(--white); 
-            padding: 40px; 
-            border-radius: 30px; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.03); 
-            border: 1px solid rgba(244, 143, 177, 0.1);
-            margin-bottom: 30px;
-        }
-
-        input { 
-            width: 100%; 
-            padding: 18px; 
-            border: 1px solid #f0f0f0; 
-            border-radius: 15px; 
-            margin-bottom: 20px; 
-            font-family: inherit; 
-            font-size: 16px;
-            transition: var(--transition);
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--pink); background: #fffcfd; }
-
-        .btn { 
-            padding: 16px 30px; 
-            border: none; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: var(--transition);
-            display: block;
-            width: 100%;
-            font-size: 16px;
-        }
-
+        .main-content-wrapper { margin-left: 260px; width: calc(100% - 260px); display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; padding: 40px 20px; opacity: 0; transform: translateY(20px); transition: var(--transition); }
+        .container.loaded { opacity: 1; transform: translateY(0); }
+        .card { background: var(--white); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.03); border: 1px solid rgba(244, 143, 177, 0.1); margin-bottom: 30px; }
+        input { width: 100%; padding: 18px; border: 1px solid #f0f0f0; border-radius: 15px; margin-bottom: 20px; box-sizing: border-box; outline: none; }
+        .btn { padding: 16px 30px; border: none; border-radius: 15px; cursor: pointer; font-weight: 600; width: 100%; display: block; }
         .btn-add { background: var(--soft-pink); color: var(--pink); margin-bottom: 20px; }
-        .btn-add:hover { background: var(--pink); color: white; }
-
-        .btn-save { background: var(--dark); color: white; margin-top: 30px; letter-spacing: 1px; }
-        .btn-save:hover { transform: scale(1.02); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-
-        .variant-box { 
-            background: #fffcfd; 
-            border: 1px solid #fdf0f4; 
-            padding: 30px; 
-            border-radius: 25px; 
-            margin-top: 25px; 
-            animation: slideIn 0.6s ease forwards;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* --- TOAST --- */
-        #toast {
-            position: fixed;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--pink);
-            color: white;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(244, 143, 177, 0.4);
-            transition: var(--transition);
-            z-index: 10001;
-        }
-
+        .btn-save { background: var(--dark); color: white; margin-top: 30px; }
+        .variant-box { background: #fffcfd; border: 1px solid #fdf0f4; padding: 30px; border-radius: 25px; margin-top: 25px; }
+        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--pink); color: white; padding: 15px 40px; border-radius: 50px; font-weight: 600; transition: var(--transition); z-index: 10001; }
         #toast.show { bottom: 40px; }
-
         .gallery { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
-        .img-card { width: 80px; height: 100px; border-radius: 12px; overflow: hidden; position: relative; animation: fadeIn 0.5s ease; }
+        .img-card { width: 80px; height: 100px; border-radius: 12px; overflow: hidden; position: relative; }
         .img-card img { width: 100%; height: 100%; object-fit: cover; }
-        .img-card span { position: absolute; top: 0; right: 0; background: var(--pink); color: white; width: 20px; height: 20px; text-align: center; cursor: pointer; font-size: 12px; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+        .img-card span { position: absolute; top: 0; right: 0; background: var(--pink); color: white; width: 20px; height: 20px; text-align: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="loader">
-    <div class="heart-loader"></div>
-</div>
-
+<div id="loader"><div class="heart-loader"></div></div>
 <div id="toast">Xabar! ✨</div>
 
 <div class="sidebar">
@@ -281,7 +69,7 @@
 
 <div class="main-content-wrapper">
     <div class="container" id="main-content">
-        <div class="header">
+        <div class="header" style="text-align:center; margin-bottom:50px;">
             <h1>SARPO</h1>
             <p style="color: #999; font-size: 12px;">ADMIN BOSHQARUVI</p>
         </div>
@@ -290,9 +78,7 @@
             <div class="card">
                 <input type="text" id="p-name" placeholder="Mahsulot nomi">
                 <input type="number" id="p-price" placeholder="Asosiy narx">
-
                 <div id="variant-list"></div>
-
                 <button class="btn btn-add" onclick="addVariant()">+ Rang va rasmlarni kiritish</button>
                 <button class="btn btn-save" onclick="saveData()">SAQLASH</button>
             </div>
@@ -304,83 +90,62 @@
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
-    const firebaseConfig = {
-  apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
-  authDomain: "sarpolux.firebaseapp.com",
-  projectId: "sarpolux",
-  storageBucket: "sarpolux.firebasestorage.app",
-  messagingSenderId: "928140641986",
-  appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
-};
+    // 1. Kirish paroli
+    (function() {
+        const SECRET_PASS = "2026";
+        if (sessionStorage.getItem('sarpo_auth') !== 'true') {
+            const entry = prompt("Admin panelga kirish uchun parolni kiriting:");
+            if (entry === SECRET_PASS) {
+                sessionStorage.setItem('sarpo_auth', 'true');
+            } else {
+                alert("Parol noto'g'ri! 🛑");
+                location.reload();
+            }
+        }
+    })();
 
-// Firebase'ni ishga tushirish
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zgaruvchi
-    // 1. Sahifa yuklanish animatsiyasi
+    // 2. Firebase Init
+    const firebaseConfig = {
+        apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
+        authDomain: "sarpolux.firebaseapp.com",
+        projectId: "sarpolux",
+        storageBucket: "sarpolux.firebasestorage.app",
+        messagingSenderId: "928140641986",
+        appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 3. UI logic
     window.addEventListener('load', () => {
         setTimeout(() => {
             document.getElementById('loader').style.opacity = '0';
             document.getElementById('main-content').classList.add('loaded');
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-            }, 800);
-        }, 1500);
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
+        }, 1000);
     });
 
-    // 2. Chiroyli Toast (Xabarnoma)
     function notify(msg) {
         const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.classList.add('show');
+        t.innerText = msg; t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // 3. SOZLAMALARNI YUKLASH FUNKSIYASI
-    async function openSettings() {
-        const loader = document.getElementById('loader');
-        loader.style.display = 'flex';
-        loader.style.opacity = '1';
-
-        document.getElementById('sec-p').style.display = 'none';
-        document.getElementById('sec-settings').style.display = 'block';
-        
-        document.getElementById('btn-p').classList.remove('active');
-        document.getElementById('btn-s').classList.add('active');
-
-        try {
-            const response = await fetch('settings.html');
-            if (!response.ok) throw new Error();
-            const html = await response.text();
-            document.getElementById('settings-content').innerHTML = html;
-        } catch (err) {
-            document.getElementById('settings-content').innerHTML = `
-                <div class="card" style="text-align:center">
-                    <p style="color:var(--pink)">settings.html fayli topilmadi 🌸</p>
-                    <p style="font-size:12px; color:#999">Iltimos, settings.html fayli borligini tekshiring.</p>
-                </div>`;
-        } finally {
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 800);
-            }, 1000);
-        }
-    }
-
-    // BO'LIMLARNI ALMASHTIRISH (SWITCH)
     function switchTab(tab) {
         if(tab === 'p') {
             document.getElementById('sec-p').style.display = 'block';
             document.getElementById('sec-settings').style.display = 'none';
             document.getElementById('btn-p').classList.add('active');
             document.getElementById('btn-s').classList.remove('active');
-            notify("Mahsulotlar bo'limi 👗");
         }
     }
 
-    // 4. Rang qo'shish
+    async function openSettings() {
+        notify("Sozlamalar yuklanmoqda...");
+        // settings.html yuklash logikasi (ixtiyoriy)
+    }
+
     function addVariant() {
         const vId = Date.now();
         const div = document.createElement('div');
@@ -391,31 +156,23 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
                 <span style="color:var(--pink); font-weight:600">Rang to'plami</span>
                 <span style="cursor:pointer; color:#ccc" onclick="removeEl('v-${vId}')">O'chirish</span>
             </div>
-            <input type="text" placeholder="Rang nomi (masalan: Oq)" class="v-color">
-            <input type="number" placeholder="Rang narxi (ixtiyoriy)" class="v-price">
-            
+            <input type="text" placeholder="Rang nomi" class="v-color">
+            <input type="number" placeholder="Rang narxi" class="v-price">
             <input type="file" multiple accept="image/*" onchange="previewImgs(this, ${vId})" id="f-${vId}" style="display:none">
-            <button class="btn" style="background:#fff; border:1px dashed var(--pink); color:var(--pink); font-size:13px;" onclick="document.getElementById('f-${vId}').click()">+ Rasmlarni tanlash</button>
-            
+            <button class="btn" style="background:#fff; border:1px dashed var(--pink); color:var(--pink);" onclick="document.getElementById('f-${vId}').click()">+ Rasmlar</button>
             <div class="gallery" id="gal-${vId}"></div>
-
-            <div id="sizes-${vId}" style="margin-top:15px"></div>
-            <button class="btn" style="background:none; color:var(--pink); font-size:12px; text-decoration:underline" onclick="addSize(${vId})">+ Razmer va maxsus narx qo'shish</button>
+            <div id="sizes-${vId}"></div>
+            <button class="btn" style="background:none; color:var(--pink); text-decoration:underline" onclick="addSize(${vId})">+ Razmer qo'shish</button>
         `;
         document.getElementById('variant-list').appendChild(div);
-        notify("Yangi bo'lim qo'shildi 🌸");
     }
 
     function addSize(vId) {
         const sId = Date.now();
         const div = document.createElement('div');
-        div.style = "display:flex; gap:10px; margin-bottom:10px; animation: fadeIn 0.4s ease";
+        div.style = "display:flex; gap:10px; margin-bottom:10px;";
         div.id = `s-${sId}`;
-        div.innerHTML = `
-            <input type="text" placeholder="Razmer" class="s-name" style="margin:0">
-            <input type="number" placeholder="Narx" class="s-price" style="margin:0">
-            <button onclick="removeEl('s-${sId}')" style="background:none; border:none; color:#ccc; cursor:pointer; font-size:20px;">×</button>
-        `;
+        div.innerHTML = `<input type="text" placeholder="Razmer" class="s-name" style="margin:0"><input type="number" placeholder="Narx" class="s-price" style="margin:0"><button onclick="removeEl('s-${sId}')">×</button>`;
         document.getElementById(`sizes-${vId}`).appendChild(div);
     }
 
@@ -433,41 +190,13 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
         });
     }
 
-    function removeEl(id) {
-        const el = document.getElementById(id);
-        if(!el) return;
-        el.style.opacity = '0';
-        el.style.transform = 'scale(0.9)';
-        setTimeout(() => el.remove(), 400);
-    }
+    function removeEl(id) { document.getElementById(id).remove(); }
 
-    // MA'LUMOTLARNI YIG'ISH VA SAQLASH
- <script>
-    // 1. Firebase konfigurasiyasi
-    const firebaseConfig = {
-        apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
-        authDomain: "sarpolux.firebaseapp.com",
-        projectId: "sarpolux",
-        storageBucket: "sarpolux.firebasestorage.app",
-        messagingSenderId: "928140641986",
-        appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
-    };
-
-    // 2. Firebase-ni ishga tushirish
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
-
-    // 3. Saqlash funksiyasi
     function saveData() {
         const productName = document.getElementById('p-name').value;
         const productBasePrice = document.getElementById('p-price').value;
 
-        if(!productName) {
-            notify("Iltimos, mahsulot nomini kiriting! ⚠️");
-            return;
-        }
+        if(!productName) { notify("Mahsulot nomini kiriting! ⚠️"); return; }
 
         document.getElementById('loader').style.display = 'flex';
         document.getElementById('loader').style.opacity = '1';
@@ -489,32 +218,21 @@ const db = firebase.firestore(); // Ma'lumotlar bazasi bilan ishlash uchun o'zga
             variants.push({ color, price, images, sizes });
         });
 
-        const finalData = {
+        db.collection("products").add({
             name: productName,
             basePrice: productBasePrice,
             variants: variants,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // Firebase Firestore-ga yozish
-        db.collection("products").add(finalData)
-            .then((docRef) => {
-                console.log("Saqlandi! ID:", docRef.id);
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    notify("Ma'lumotlar bazaga saqlandi! 🔥");
-                    // Tozalash
-                    document.getElementById('p-name').value = '';
-                    document.getElementById('p-price').value = '';
-                    document.getElementById('variant-list').innerHTML = '';
-                }, 800);
-            })
-            .catch((error) => {
-                console.error("Xatolik: ", error);
-                document.getElementById('loader').style.display = 'none';
-                notify("Xatolik yuz berdi! 🛑");
-            });
+        })
+        .then(() => {
+            notify("Bazaga saqlandi! 🔥");
+            setTimeout(() => location.reload(), 1500);
+        })
+        .catch((err) => {
+            console.error(err);
+            notify("Xatolik bo'ldi! 🛑");
+            document.getElementById('loader').style.display = 'none';
+        });
     }
 </script>
 
