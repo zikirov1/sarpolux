@@ -1,0 +1,150 @@
+<div class="settings-wrapper" style="animation: fadeIn 0.8s ease;">
+    
+    <div class="card">
+        <h3 style="color: var(--pink); margin-top: 0;">🔝 Header Sozlamalari</h3>
+        <p style="font-size: 12px; color: #999; margin-bottom: 20px;">Saytning tepa qismini tahrirlash</p>
+        
+        <label>Logotip matni (Brend nomi):</label>
+        <input type="text" id="set-logo-text" value="SARPO">
+        
+        <label>Header fon rangi:</label>
+        <input type="color" id="set-header-bg" value="#ffffff" style="height: 50px; cursor: pointer;">
+        
+        <label>Header matn rangi:</label>
+        <input type="color" id="set-header-color" value="#2c3e50" style="height: 50px; cursor: pointer;">
+        
+        <label>Header balandligi (px):</label>
+        <input type="number" id="set-header-height" value="80">
+    </div>
+
+    <div class="card">
+        <h3 style="color: var(--pink); margin-top: 0;">🎨 Umumiy Dizayn (Style)</h3>
+        <p style="font-size: 12px; color: #999; margin-bottom: 20px;">Asosiy ranglar va tugma ko'rinishlari</p>
+        
+        <label>Asosiy urg'u rangi (Theme Color):</label>
+        <input type="color" id="set-main-color" value="#F48FB1" style="height: 50px; cursor: pointer;">
+        
+        <label>Sayt fon rangi:</label>
+        <input type="color" id="set-body-bg" value="#fffafa" style="height: 50px; cursor: pointer;">
+        
+        <label>Tugmalar burchagi (Border Radius - px):</label>
+        <input type="range" id="set-radius" min="0" max="50" value="15" oninput="this.nextElementSibling.value = this.value">
+        <output>15</output> px
+    </div>
+
+    <div class="card">
+        <h3 style="color: var(--pink); margin-top: 0;">底部 Footer Sozlamalari</h3>
+        <p style="font-size: 12px; color: #999; margin-bottom: 20px;">Saytning pastki qismi va kontaktlar</p>
+        
+        <label>Telegram havola (Username):</label>
+        <input type="text" id="set-tg-link" placeholder="@sarpo_admin">
+        
+        <label>Instagram havola:</label>
+        <input type="text" id="set-inst-link" placeholder="https://instagram.com/...">
+        
+        <label>Footer matni (Copyright):</label>
+        <input type="text" id="set-footer-copy" value="© 2026 SARPO | Elegant Boutique">
+        
+        <label>Footer fon rangi:</label>
+        <input type="color" id="set-footer-bg" value="#2c3e50" style="height: 50px; cursor: pointer;">
+    </div>
+
+    <button class="btn btn-save" onclick="saveAllSettings()" style="background: var(--pink); margin-bottom: 50px;">
+        BARCHA O'ZGARISHLARNI TATBIQ ETISH ✨
+    </button>
+
+</div>
+
+<style>
+    label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--dark);
+    }
+    .card:hover {
+        transform: none; 
+    }
+</style>
+
+<script>
+    // 🟢 Firebase orqali saqlash (Admin panelda database o'zgaruvchisi aniqlangan bo'lishi kerak)
+    function saveAllSettings() {
+        const config = {
+            header: {
+                logo: document.getElementById('set-logo-text').value,
+                bg: document.getElementById('set-header-bg').value,
+                color: document.getElementById('set-header-color').value,
+                height: document.getElementById('set-header-height').value
+            },
+            theme: {
+                mainColor: document.getElementById('set-main-color').value,
+                bodyBg: document.getElementById('set-body-bg').value,
+                radius: document.getElementById('set-radius').value
+            },
+            footer: {
+                tg: document.getElementById('set-tg-link').value,
+                inst: document.getElementById('set-inst-link').value,
+                copy: document.getElementById('set-footer-copy').value,
+                bg: document.getElementById('set-footer-bg').value
+            }
+        };
+
+        // 1. LocalStorage'ga saqlash (tezkorlik uchun)
+        localStorage.setItem('sarpoConfig', JSON.stringify(config));
+        
+        // 2. Firebase Database'ga yuborish (Hamma ko'rishi uchun)
+        // database o'zgaruvchisi admin.html'dan meros bo'lib o'tadi
+        if(typeof database !== "undefined") {
+            database.ref('siteSettings').set(config)
+            .then(() => {
+                if(typeof notify === "function") notify("Sayt dizayni bulutda yangilandi! 🌍✨");
+            })
+            .catch(err => alert("Firebase Xatosi: " + err.message));
+        } else {
+            if(typeof notify === "function") notify("Sozlamalar faqat lokal saqlandi (Baza ulanmagan)");
+        }
+    }
+
+    // 🟢 Bazadan mavjud ma'lumotlarni yuklab olish
+    (function loadCurrentSettings() {
+        // Avval lokal ma'lumotni ko'rsatamiz
+        const saved = localStorage.getItem('sarpoConfig');
+        if(saved) {
+            fillSettingsFields(JSON.parse(saved));
+        }
+
+        // Keyin bazadan eng oxirgi holatni olamiz
+        if(typeof database !== "undefined") {
+            database.ref('siteSettings').once('value').then((snapshot) => {
+                const cloudConfig = snapshot.val();
+                if(cloudConfig) fillSettingsFields(cloudConfig);
+            });
+        }
+    })();
+
+    function fillSettingsFields(c) {
+        if(!c) return;
+        if(c.header) {
+            document.getElementById('set-logo-text').value = c.header.logo || "SARPO";
+            document.getElementById('set-header-bg').value = c.header.bg || "#ffffff";
+            document.getElementById('set-header-color').value = c.header.color || "#2c3e50";
+            document.getElementById('set-header-height').value = c.header.height || 80;
+        }
+        if(c.theme) {
+            document.getElementById('set-main-color').value = c.theme.mainColor || "#F48FB1";
+            document.getElementById('set-body-bg').value = c.theme.bodyBg || "#fffafa";
+            document.getElementById('set-radius').value = c.theme.radius || 15;
+            // Range outputini yangilash
+            const output = document.querySelector('output');
+            if(output) output.value = c.theme.radius;
+        }
+        if(c.footer) {
+            document.getElementById('set-tg-link').value = c.footer.tg || "";
+            document.getElementById('set-inst-link').value = c.footer.inst || "";
+            document.getElementById('set-footer-copy').value = c.footer.copy || "";
+            document.getElementById('set-footer-bg').value = c.footer.bg || "#2c3e50";
+        }
+    }
+</script>

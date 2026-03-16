@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site-title">SARPO | Elegant Boutique</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* Standart o'zgaruvchilar (Admin panelda o'zgaradi) */
+        :root {
+            --main-pink: #F48FB1;
+            --bg-color: #fffafa;
+            --header-bg: #ffffff;
+            --header-color: #2c3e50;
+            --footer-bg: #2c3e50;
+            --radius: 15px;
+            --h-height: 80px;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Montserrat', sans-serif; 
+            background: var(--bg-color); 
+            transition: background 0.5s ease;
+        }
+
+        header {
+            height: var(--h-height);
+            background: var(--header-bg);
+            color: var(--header-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.5s ease;
+        }
+
+        header h1 {
+            letter-spacing: 5px;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .product-card h3 {
+            color: var(--header-color);
+            margin: 15px 0 10px;
+        }
+
+        .price {
+            font-weight: 600;
+            color: var(--main-pink);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .buy-btn {
+            background: var(--main-pink);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: calc(var(--radius) / 1.5);
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+
+        .buy-btn:hover {
+            opacity: 0.8;
+        }
+
+        footer {
+            background: var(--footer-bg);
+            color: white;
+            padding: 50px 20px;
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        .social-links {
+            margin-bottom: 20px;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Loader */
+        #page-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="page-loader">
+    <p style="color: #F48FB1; letter-spacing: 3px;">SARPO yuklanmoqda...</p>
+</div>
+
+<header id="main-header">
+    <h1 id="logo-text">SARPO</h1>
+</header>
+
+<div class="container">
+    <div class="products-grid" id="products-container">
+        </div>
+</div>
+
+<footer id="main-footer">
+    <div class="social-links" id="social-box">
+        </div>
+    <p id="footer-copy">© 2026 SARPO</p>
+</footer>
+
+<script>
+    // 1. Firebase Konfiguratsiyasi
+    const firebaseConfig = {
+        apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
+        authDomain: "sarpolux.firebaseapp.com",
+        databaseURL: "https://sarpolux-default-rtdb.firebaseio.com",
+        projectId: "sarpolux",
+        storageBucket: "sarpolux.firebasestorage.app",
+        messagingSenderId: "928140641986",
+        appId: "1:928140641986:web:1273454c1d99ab76d55d5b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // 2. DIZAYN SOZLAMALARINI REAL-VAQTDA QABUL QILISH
+    database.ref('siteSettings').on('value', (snapshot) => {
+        const config = snapshot.val();
+        if (config) {
+            // CSS o'zgaruvchilarni yangilash
+            const root = document.documentElement.style;
+            
+            // Header
+            document.getElementById('logo-text').innerText = config.header.logo;
+            root.setProperty('--header-bg', config.header.bg);
+            root.setProperty('--header-color', config.header.color);
+            root.setProperty('--h-height', config.header.height + 'px');
+            
+            // Theme
+            root.setProperty('--main-pink', config.theme.mainColor);
+            root.setProperty('--bg-color', config.theme.bodyBg);
+            root.setProperty('--radius', config.theme.radius + 'px');
+            
+            // Footer & Social
+            document.getElementById('footer-copy').innerText = config.footer.copy;
+            root.setProperty('--footer-bg', config.footer.bg);
+            
+            let socialHtml = '';
+            if(config.footer.tg) socialHtml += `<a href="https://t.me/${config.footer.tg.replace('@','')}" target="_blank">Telegram</a>`;
+            if(config.footer.inst) socialHtml += `<a href="${config.footer.inst}" target="_blank">Instagram</a>`;
+            document.getElementById('social-box').innerHTML = socialHtml;
+        }
+    });
+
+    // 3. MAHSULOTLARNI YUKLASH
+    const container = document.getElementById('products-container');
+
+    database.ref('products').on('value', (snapshot) => {
+        container.innerHTML = '';
+        const data = snapshot.val();
+        
+        if (!data) {
+            container.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Hozircha mahsulotlar yo'q 🌸</p>';
+        } else {
+            for (let id in data) {
+                const p = data[id];
+                const card = `
+                    <div class="product-card">
+                        <div style="height:200px; background:#f9f9f9; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#ddd">
+                            <span>Rasm joyi</span>
+                        </div>
+                        <h3>${p.name}</h3>
+                        <div class="price">${Number(p.price).toLocaleString()} so'm</div>
+                        <button class="buy-btn" onclick="order('${p.name}')">Sotib olish</button>
+                    </div>
+                `;
+                container.innerHTML += card;
+            }
+        }
+        // Yuklanishni o'chirish
+        document.getElementById('page-loader').style.display = 'none';
+    });
+
+    function order(name) {
+        alert(name + " uchun buyurtma qabul qilindi! Yaqin orada admin bog'lanadi.");
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarpo Admin | Nafis Boshqaruv</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --pink: #F48FB1; 
+            --soft-pink: #fce4ec;
+            --dark: #2c3e50; 
+            --white: #ffffff;
+            --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            margin: 0; 
+            background: #fffafa; 
+            overflow-x: hidden;
+            display: flex; /* Sidebar va Main yonma-yon turishi uchun */
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background: var(--dark);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            color: white;
+            z-index: 1000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+        }
+
+        .sidebar h2 {
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-align: center;
+            margin-bottom: 50px;
+            color: var(--pink);
+        }
+
+        .menu-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            color: #bdc3c7;
+            text-align: left;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-btn:hover {
+            color: var(--pink);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .menu-btn.active {
+            background: var(--pink);
+            color: white;
+            box-shadow: 0 10px 20px rgba(244, 143, 177, 0.2);
+        }
+
+        /* --- LOADER (Yurakcha animatsiyasi) --- */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease;
+        }
+
+        .heart-loader {
+            width: 50px;
+            height: 50px;
+            background-color: var(--pink);
+            transform: rotate(45deg);
+            animation: heartBeat 1.2s infinite;
+            position: relative;
+        }
+
+        .heart-loader::before, .heart-loader::after {
+            content: "";
+            width: 50px;
+            height: 50px;
+            background-color: var(--pink);
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .heart-loader::before { top: -25px; left: 0; }
+        .heart-loader::after { left: -25px; top: 0; }
+
+        @keyframes heartBeat {
+            0% { transform: rotate(45deg) scale(0.8); }
+            5% { transform: rotate(45deg) scale(0.9); }
+            10% { transform: rotate(45deg) scale(0.8); }
+            15% { transform: rotate(45deg) scale(1); }
+            50% { transform: rotate(45deg) scale(0.8); }
+            100% { transform: rotate(45deg) scale(0.8); }
+        }
+
+        /* --- ASOSIY DIZAYN --- */
+        .main-content-wrapper {
+            margin-left: 260px; /* Sidebar kengligi uchun joy */
+            width: calc(100% - 260px);
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .container.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            color: var(--dark);
+            letter-spacing: 5px;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .card { 
+            background: var(--white); 
+            padding: 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.03); 
+            border: 1px solid rgba(244, 143, 177, 0.1);
+            margin-bottom: 30px;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 18px; 
+            border: 1px solid #f0f0f0; 
+            border-radius: 15px; 
+            margin-bottom: 20px; 
+            font-family: inherit; 
+            font-size: 16px;
+            transition: var(--transition);
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--pink); background: #fffcfd; }
+
+        .btn { 
+            padding: 16px 30px; 
+            border: none; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: var(--transition);
+            display: block;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .btn-add { background: var(--soft-pink); color: var(--pink); margin-bottom: 20px; }
+        .btn-add:hover { background: var(--pink); color: white; }
+
+        .btn-save { background: var(--dark); color: white; margin-top: 30px; letter-spacing: 1px; }
+        .btn-save:hover { transform: scale(1.02); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+        .variant-box { 
+            background: #fffcfd; 
+            border: 1px solid #fdf0f4; 
+            padding: 30px; 
+            border-radius: 25px; 
+            margin-top: 25px; 
+            animation: slideIn 0.6s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- TOAST --- */
+        #toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--pink);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(244, 143, 177, 0.4);
+            transition: var(--transition);
+            z-index: 10001;
+        }
+
+        #toast.show { bottom: 40px; }
+
+        .gallery { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+        .img-card { width: 80px; height: 100px; border-radius: 12px; overflow: hidden; position: relative; animation: fadeIn 0.5s ease; }
+        .img-card img { width: 100%; height: 100%; object-fit: cover; }
+        .img-card span { position: absolute; top: 0; right: 0; background: var(--pink); color: white; width: 20px; height: 20px; text-align: center; cursor: pointer; font-size: 12px; }
+
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="heart-loader"></div>
+</div>
+
+<div id="toast">Xabar! ✨</div>
+
+<div class="sidebar">
+    <h2>SARPO</h2>
+    <button class="menu-btn active" id="btn-p" onclick="switchTab('p')">👗 Mahsulotlar</button>
+    <button class="menu-btn" id="id="btn-s" onclick="openSettings()">⚙️ Sozlamalar</button>
+</div>
+
+<div class="main-content-wrapper">
+    <div class="container" id="main-content">
+        <div class="header">
+            <h1>SARPO</h1>
+            <p style="color: #999; font-size: 12px;">ADMIN BOSHQARUVI</p>
+        </div>
+
+        <div id="sec-p">
+            <div class="card">
+                <input type="text" id="p-name" placeholder="Mahsulot nomi">
+                <input type="number" id="p-price" placeholder="Asosiy narx">
+
+                <div id="variant-list"></div>
+
+                <button class="btn btn-add" onclick="addVariant()">+ Rang va rasmlarni kiritish</button>
+                <button class="btn btn-save" onclick="saveData()">SAQLASH</button>
+            </div>
+        </div>
+
+        <div id="sec-settings" style="display:none;">
+            <div id="settings-content">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Sahifa yuklanish animatsiyasi
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            document.getElementById('main-content').classList.add('loaded');
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 800);
+        }, 1500);
+    });
+
+    // 2. Chiroyli Toast (Xabarnoma)
+    function notify(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // 3. SOZLAMALARNI YUKLASH FUNKSIYASI
+    async function openSettings() {
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
+
+        // Bo'limlarni almashtirish
+        document.getElementById('sec-p').style.display = 'none';
+        document.getElementById('sec-settings').style.display = 'block';
+        
+        // Tugmalar holatini yangilash
+        document.getElementById('btn-p').classList.remove('active');
+        document.querySelector('button[onclick="openSettings()"]').classList.add('active');
+
+        try {
+            const response = await fetch('settings.html');
+            if (!response.ok) throw new Error();
+            const html = await response.text();
+            document.getElementById('settings-content').innerHTML = html;
+        } catch (err) {
+            document.getElementById('settings-content').innerHTML = `
+                <div class="card" style="text-align:center">
+                    <p style="color:var(--pink)">settings.html fayli topilmadi 🌸</p>
+                    <p style="font-size:12px; color:#999">Iltimos, settings.html fayli borligini tekshiring.</p>
+                </div>`;
+        } finally {
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 800);
+            }, 1000);
+        }
+    }
+
+    // BO'LIMLARNI ALMASHTIRISH (SWITCH)
+    function switchTab(tab) {
+        if(tab === 'p') {
+            document.getElementById('sec-p').style.display = 'block';
+            document.getElementById('sec-settings').style.display = 'none';
+            document.getElementById('btn-p').classList.add('active');
+            document.querySelector('button[onclick="openSettings()"]').classList.remove('active');
+            notify("Mahsulotlar bo'limi 👗");
+        }
+    }
+
+    // 4. Rang qo'shish
+    function addVariant() {
+        const vId = Date.now();
+        const div = document.createElement('div');
+        div.className = 'variant-box';
+        div.id = `v-${vId}`;
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px">
+                <span style="color:var(--pink); font-weight:600">Rang to'plami</span>
+                <span style="cursor:pointer; color:#ccc" onclick="removeEl('v-${vId}')">O'chirish</span>
+            </div>
+            <input type="text" placeholder="Rang nomi (masalan: Oq)" class="v-color">
+            <input type="number" placeholder="Rang narxi (ixtiyoriy)" class="v-price">
+            
+            <input type="file" multiple accept="image/*" onchange="previewImgs(this, ${vId})" id="f-${vId}" style="display:none">
+            <button class="btn" style="background:#fff; border:1px dashed var(--pink); color:var(--pink); font-size:13px;" onclick="document.getElementById('f-${vId}').click()">+ Rasmlarni tanlash</button>
+            
+            <div class="gallery" id="gal-${vId}"></div>
+
+            <div id="sizes-${vId}" style="margin-top:15px"></div>
+            <button class="btn" style="background:none; color:var(--pink); font-size:12px; text-decoration:underline" onclick="addSize(${vId})">+ Razmer va maxsus narx qo'shish</button>
+        `;
+        document.getElementById('variant-list').appendChild(div);
+        notify("Yangi bo'lim qo'shildi 🌸");
+    }
+
+    function addSize(vId) {
+        const sId = Date.now();
+        const div = document.createElement('div');
+        div.style = "display:flex; gap:10px; margin-bottom:10px; animation: fadeIn 0.4s ease";
+        div.id = `s-${sId}`;
+        div.innerHTML = `
+            <input type="text" placeholder="48" class="s-name" style="margin:0">
+            <input type="number" placeholder="Narx" class="s-price" style="margin:0">
+            <button onclick="removeEl('s-${sId}')" style="background:none; border:none; color:#ccc; cursor:pointer">×</button>
+        `;
+        document.getElementById(`sizes-${vId}`).appendChild(div);
+    }
+
+    function previewImgs(input, vId) {
+        const gal = document.getElementById(`gal-${vId}`);
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const d = document.createElement('div');
+                d.className = 'img-card';
+                d.innerHTML = `<img src="${e.target.result}"><span onclick="this.parentElement.remove()">×</span>`;
+                gal.appendChild(d);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeEl(id) {
+        const el = document.getElementById(id);
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.9)';
+        setTimeout(() => el.remove(), 400);
+    }
+
+    function saveData() {
+        document.getElementById('loader').style.display = 'flex';
+        document.getElementById('loader').style.opacity = '1';
+        
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                notify("Hamma o'zgarishlar saqlandi! ✨");
+            }, 800);
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
