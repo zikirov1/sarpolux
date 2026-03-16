@@ -3,164 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="site-title">SARPO | Elegant Boutique</title>
+    <title>Sarpo | Katalog</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* Standart o'zgaruvchilar (Admin panelda o'zgaradi) */
-        :root {
-            --main-pink: #F48FB1;
-            --bg-color: #fffafa;
-            --header-bg: #ffffff;
-            --header-color: #2c3e50;
-            --footer-bg: #2c3e50;
-            --radius: 15px;
-            --h-height: 80px;
+        :root { --pink: #F48FB1; --dark: #2c3e50; --bg: #fffafa; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; background: var(--bg); color: var(--dark); }
+        
+        header { background: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; color: var(--pink); letter-spacing: 5px; font-weight: 400; }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        /* Mahsulotlar to'plami (Grid) */
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 25px; 
         }
 
-        body { 
-            margin: 0; 
-            font-family: 'Montserrat', sans-serif; 
-            background: var(--bg-color); 
-            transition: background 0.5s ease;
+        .product-card { 
+            background: white; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+            transition: 0.3s;
+            border: 1px solid #f0f0f0;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+
+        .product-img { width: 100%; height: 300px; object-fit: cover; background: #eee; }
+        
+        .product-info { padding: 20px; text-align: center; }
+        .product-name { font-weight: 600; font-size: 18px; margin-bottom: 10px; display: block; }
+        .product-price { color: var(--pink); font-size: 20px; font-weight: 700; }
+        
+        .buy-btn { 
+            display: block; width: 100%; padding: 12px; background: var(--pink); 
+            color: white; text-decoration: none; border-radius: 0 0 20px 20px; 
+            text-align: center; font-weight: 600; margin-top: 10px;
         }
 
-        header {
-            height: var(--h-height);
-            background: var(--header-bg);
-            color: var(--header-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            transition: all 0.5s ease;
-        }
-
-        header h1 {
-            letter-spacing: 5px;
-            font-weight: 400;
-            margin: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .product-card {
-            background: white;
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            text-align: center;
-            border: 1px solid rgba(0,0,0,0.03);
-            transition: transform 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-10px);
-        }
-
-        .product-card h3 {
-            color: var(--header-color);
-            margin: 15px 0 10px;
-        }
-
-        .price {
-            font-weight: 600;
-            color: var(--main-pink);
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .buy-btn {
-            background: var(--main-pink);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: calc(var(--radius) / 1.5);
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            transition: opacity 0.3s;
-        }
-
-        .buy-btn:hover {
-            opacity: 0.8;
-        }
-
-        footer {
-            background: var(--footer-bg);
-            color: white;
-            padding: 50px 20px;
-            text-align: center;
-            margin-top: 100px;
-        }
-
-        .social-links {
-            margin-bottom: 20px;
-        }
-
-        .social-links a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 14px;
-            opacity: 0.7;
-        }
+        #empty-msg { text-align: center; padding: 50px; color: #999; display: none; }
 
         /* Loader */
-        #page-loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+        #main-loader { display: flex; justify-content: center; padding: 50px; }
+        .dot { width: 10px; height: 10px; background: var(--pink); border-radius: 50%; margin: 5px; animation: bounce 0.5s infinite alternate; }
+        .dot:nth-child(2) { animation-delay: 0.1s; }
+        .dot:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes bounce { to { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
-<div id="page-loader">
-    <p style="color: #F48FB1; letter-spacing: 3px;">SARPO yuklanmoqda...</p>
-</div>
-
-<header id="main-header">
-    <h1 id="logo-text">SARPO</h1>
+<header>
+    <h1>SARPO</h1>
 </header>
 
 <div class="container">
-    <div class="products-grid" id="products-container">
-        </div>
+    <div id="main-loader">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    
+    <div id="empty-msg">Hozircha mahsulotlar yo'q... 🌸</div>
+    <div class="product-grid" id="products-container"></div>
 </div>
 
-<footer id="main-footer">
-    <div class="social-links" id="social-box">
-        </div>
-    <p id="footer-copy">© 2026 SARPO</p>
-</footer>
-
 <script>
-    // 1. Firebase Konfiguratsiyasi
+    // 1. Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCU5dmq2bL3G7kN0NGZfMirsrc_SuIKiQw",
         authDomain: "sarpolux.firebaseapp.com",
-        databaseURL: "https://sarpolux-default-rtdb.firebaseio.com",
         projectId: "sarpolux",
         storageBucket: "sarpolux.firebasestorage.app",
         messagingSenderId: "928140641986",
@@ -168,69 +84,47 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.firestore();
 
-    // 2. DIZAYN SOZLAMALARINI REAL-VAQTDA QABUL QILISH
-    database.ref('siteSettings').on('value', (snapshot) => {
-        const config = snapshot.val();
-        if (config) {
-            // CSS o'zgaruvchilarni yangilash
-            const root = document.documentElement.style;
-            
-            // Header
-            document.getElementById('logo-text').innerText = config.header.logo;
-            root.setProperty('--header-bg', config.header.bg);
-            root.setProperty('--header-color', config.header.color);
-            root.setProperty('--h-height', config.header.height + 'px');
-            
-            // Theme
-            root.setProperty('--main-pink', config.theme.mainColor);
-            root.setProperty('--bg-color', config.theme.bodyBg);
-            root.setProperty('--radius', config.theme.radius + 'px');
-            
-            // Footer & Social
-            document.getElementById('footer-copy').innerText = config.footer.copy;
-            root.setProperty('--footer-bg', config.footer.bg);
-            
-            let socialHtml = '';
-            if(config.footer.tg) socialHtml += `<a href="https://t.me/${config.footer.tg.replace('@','')}" target="_blank">Telegram</a>`;
-            if(config.footer.inst) socialHtml += `<a href="${config.footer.inst}" target="_blank">Instagram</a>`;
-            document.getElementById('social-box').innerHTML = socialHtml;
-        }
-    });
-
-    // 3. MAHSULOTLARNI YUKLASH
+    // 2. Mahsulotlarni yuklash
     const container = document.getElementById('products-container');
+    const loader = document.getElementById('main-loader');
+    const emptyMsg = document.getElementById('empty-msg');
 
-    database.ref('products').on('value', (snapshot) => {
-        container.innerHTML = '';
-        const data = snapshot.val();
-        
-        if (!data) {
-            container.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Hozircha mahsulotlar yo'q 🌸</p>';
-        } else {
-            for (let id in data) {
-                const p = data[id];
-                const card = `
-                    <div class="product-card">
-                        <div style="height:200px; background:#f9f9f9; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#ddd">
-                            <span>Rasm joyi</span>
-                        </div>
-                        <h3>${p.name}</h3>
-                        <div class="price">${Number(p.price).toLocaleString()} so'm</div>
-                        <button class="buy-btn" onclick="order('${p.name}')">Sotib olish</button>
-                    </div>
-                `;
-                container.innerHTML += card;
-            }
+    // Firestore'dan real-time ma'lumot olish
+    db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        container.innerHTML = ""; // Oldingilarni tozalash
+        loader.style.display = "none";
+
+        if (snapshot.empty) {
+            emptyMsg.style.display = "block";
+            return;
         }
-        // Yuklanishni o'chirish
-        document.getElementById('page-loader').style.display = 'none';
-    });
 
-    function order(name) {
-        alert(name + " uchun buyurtma qabul qilindi! Yaqin orada admin bog'lanadi.");
-    }
+        emptyMsg.style.display = "none";
+
+        snapshot.forEach((doc) => {
+            const p = doc.data();
+            
+            // Birinchi variantdagi birinchi rasmni olish (agar bo'lsa)
+            let mainImg = "https://via.placeholder.com/300x400?text=Sarpo";
+            if (p.variants && p.variants[0] && p.variants[0].images && p.variants[0].images[0]) {
+                mainImg = p.variants[0].images[0];
+            }
+
+            const card = `
+                <div class="product-card">
+                    <img src="${mainImg}" class="product-img" alt="${p.name}">
+                    <div class="product-info">
+                        <span class="product-name">${p.name}</span>
+                        <span class="product-price">${Number(p.price).toLocaleString()} so'm</span>
+                    </div>
+                    <a href="https://t.me/YANGIYOLLIKLAR_BOZORI" target="_blank" class="buy-btn">BUYURTMA BERISH</a>
+                </div>
+            `;
+            container.innerHTML += card;
+        });
+    });
 </script>
 
 </body>
